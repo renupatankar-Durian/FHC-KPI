@@ -197,6 +197,32 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
 .modal-row:last-of-type{border-bottom:none}
 .divider{height:1px;background:var(--bd);margin:.75rem 0}
 
+/* ── PHOTO UPLOAD ── */
+.photo-zone{margin-top:8px}
+.photo-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;font-family:'DM Sans',sans-serif;padding:5px 11px;border-radius:6px;border:1.5px dashed var(--bd2);background:var(--sur2);color:var(--ink2);cursor:pointer;transition:all .15s}
+.photo-btn:hover{border-color:var(--gm);color:var(--g);background:var(--gp)}
+.photo-btn svg{width:13px;height:13px;flex-shrink:0}
+.photo-inp{display:none}
+.photo-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.photo-thumb{position:relative;width:72px;height:72px;border-radius:7px;overflow:hidden;border:1px solid var(--bd);flex-shrink:0;background:var(--sur2)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-del{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;font-weight:700}
+.photo-del:hover{background:var(--r)}
+.photo-count{font-size:10px;color:var(--ink3);margin-top:4px}
+
+/* ── LIGHTBOX ── */
+.lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center}
+.lb.open{display:flex}
+.lb img{max-width:92vw;max-height:88vh;border-radius:8px;object-fit:contain}
+.lb-close{position:fixed;top:14px;right:18px;color:#fff;font-size:28px;cursor:pointer;line-height:1;font-weight:300;opacity:.8}
+.lb-close:hover{opacity:1}
+
+/* ── REPORT PHOTOS ── */
+.rpt-photo-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.rpt-photo-item{border-radius:6px;overflow:hidden;border:1px solid var(--bd)}
+.rpt-photo-item img{width:100px;height:80px;object-fit:cover;display:block;cursor:pointer}
+.rpt-photo-label{font-size:10px;color:var(--ink3);padding:3px 5px;background:var(--sur2);max-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 @media(max-width:600px){
   .meta-grid{grid-template-columns:1fr}
   .tabs{overflow-x:auto}
@@ -342,6 +368,12 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
 
 </div><!-- /shell -->
 
+<!-- LIGHTBOX -->
+<div class="lb" id="lb" onclick="closeLB()">
+  <div class="lb-close" onclick="closeLB()">✕</div>
+  <img id="lb-img" src="" alt="">
+</div>
+
 <!-- ════════════════ MODAL ════════════════ -->
 <div class="modal-bg" id="modal">
   <div class="modal">
@@ -451,7 +483,7 @@ const SECS = [
 // ─────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────
-const ST = { a:{}, t:{}, n:{} };
+const ST = { a:{}, t:{}, n:{}, imgs:{} };
 let _reportTxt = '';
 let _slideData = [];
 
@@ -520,10 +552,21 @@ function renderItem(it, isLast, secId) {
     ctrl = `<input type="text" class="txt-inp" value="${ST.t[id]||''}" placeholder="Enter details here…" oninput="ST.t['${id}']=this.value">`;
   }
 
+  const photoZone = img ? `
+    <div class="photo-zone" id="pz-${id}">
+      <label class="photo-btn" onclick="triggerPhoto('${id}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Add photo
+      </label>
+      <input type="file" accept="image/*" capture="environment" class="photo-inp" id="pi-${id}" onchange="handlePhoto('${id}',this)">
+      <div class="photo-grid" id="pg-${id}">${renderThumbs(id)}</div>
+    </div>` : '';
+
   return `<div class="item${isLast?' li':''}">
-    <div>
+    <div style="flex:1">
       <div class="item-q${type===3?' sub':''}">${q}</div>
       ${ctrl}
+      ${photoZone}
     </div>
     <div class="flags">${flags}</div>
   </div>`;
@@ -583,7 +626,81 @@ function resetAll() {
   Object.keys(ST.a).forEach(k => delete ST.a[k]);
   Object.keys(ST.t).forEach(k => delete ST.t[k]);
   Object.keys(ST.n).forEach(k => delete ST.n[k]);
+  Object.keys(ST.imgs).forEach(k => delete ST.imgs[k]);
   renderChecklist();
+}
+
+// ─────────────────────────────────────────────
+//  PHOTO HANDLING
+// ─────────────────────────────────────────────
+function triggerPhoto(id) {
+  document.getElementById('pi-' + id).click();
+}
+
+function handlePhoto(id, input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      compressImage(e.target.result, 1024, 0.78, compressed => {
+        if (!ST.imgs[id]) ST.imgs[id] = [];
+        if (ST.imgs[id].length >= 5) { alert('Maximum 5 photos per question.'); return; }
+        ST.imgs[id].push({ src: compressed, name: file.name });
+        document.getElementById('pg-' + id).innerHTML = renderThumbs(id);
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function compressImage(dataUrl, maxPx, quality, cb) {
+  const img = new Image();
+  img.onload = () => {
+    let w = img.width, h = img.height;
+    if (w > maxPx || h > maxPx) {
+      if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+      else { w = Math.round(w * maxPx / h); h = maxPx; }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    cb(canvas.toDataURL('image/jpeg', quality));
+  };
+  img.src = dataUrl;
+}
+
+function renderThumbs(id) {
+  const photos = ST.imgs[id] || [];
+  if (!photos.length) return '';
+  return photos.map((p, i) => `
+    <div class="photo-thumb">
+      <img src="${p.src}" alt="${p.name}" onclick="openLB('${id}',${i})" title="Click to enlarge">
+      <button class="photo-del" onclick="removePhoto('${id}',${i})">✕</button>
+    </div>`).join('');
+}
+
+function removePhoto(id, idx) {
+  ST.imgs[id].splice(idx, 1);
+  if (!ST.imgs[id].length) delete ST.imgs[id];
+  document.getElementById('pg-' + id).innerHTML = renderThumbs(id);
+}
+
+function openLB(id, idx) {
+  const src = ST.imgs[id]?.[idx]?.src;
+  if (!src) return;
+  document.getElementById('lb-img').src = src;
+  document.getElementById('lb').classList.add('open');
+}
+
+function closeLB() {
+  document.getElementById('lb').classList.remove('open');
+  document.getElementById('lb-img').src = '';
+}
+
+function photoCount() {
+  return Object.values(ST.imgs).reduce((s, arr) => s + arr.length, 0);
 }
 
 // ─────────────────────────────────────────────
@@ -602,7 +719,8 @@ function refreshShareStats() {
     <div class="row"><span>Zonal VM</span><span class="row-val">${vm}</span></div>
     <div class="row"><span>Completion</span><span class="row-val" style="color:${col}">${done} / ${tot} (${pct}%)</span></div>
     <div class="row"><span>Red flags raised</span><span class="row-val" style="color:${rf>0?'var(--r)':'var(--g)'}">${rf}</span></div>
-    <div class="row"><span>Compliant items</span><span class="row-val" style="color:var(--g)">${ok}</span></div>`;
+    <div class="row"><span>Compliant items</span><span class="row-val" style="color:var(--g)">${ok}</span></div>
+    <div class="row"><span>Photos captured</span><span class="row-val" style="color:var(--bl)">${photoCount()}</span></div>`;
 }
 
 function genCode() {
@@ -620,7 +738,7 @@ async function saveAudit() {
     grade: document.getElementById('f-grade').value,
     vtype: document.getElementById('f-vtype').value,
   };
-  const payload = JSON.stringify({ meta, a: ST.a, t: ST.t, n: ST.n });
+  const payload = JSON.stringify({ meta, a: ST.a, t: ST.t, n: ST.n, imgs: ST.imgs });
   try {
     await window.storage.set('fhc:' + code, payload, true);
   } catch(e) {}
@@ -638,6 +756,7 @@ async function loadAudit() {
     if (!res) { msg.innerHTML = `<div class="info-msg info-r">No audit found for that code. Please check and try again.</div>`; return; }
     const data = JSON.parse(res.value);
     Object.assign(ST.a, data.a||{}); Object.assign(ST.t, data.t||{}); Object.assign(ST.n, data.n||{});
+    if (data.imgs) Object.assign(ST.imgs, data.imgs);
     const m = data.meta || {};
     ['store','date','vm','mgr','grade','vtype'].forEach(k => {
       const el = document.getElementById('f-'+k);
@@ -763,7 +882,31 @@ function renderReport(r, p) {
     <div class="rpt-section"><h4>Red flags — immediate action required</h4>${rfRows}</div>
     <div class="rpt-section"><h4>Recommendations</h4>${recs}</div>
     <div class="rpt-section"><h4>Next steps</h4>${steps}</div>
-    <div style="font-size:11px;color:var(--ink3);padding-top:8px;border-top:1px solid var(--bd)">Suggested follow-up: ${r.followUp}</div>`;
+    <div style="font-size:11px;color:var(--ink3);padding-top:8px;border-top:1px solid var(--bd)">Suggested follow-up: ${r.followUp}</div>
+    ${renderReportPhotos()}`;
+}
+
+function renderReportPhotos() {
+  const allPhotos = [];
+  SECS.forEach(sec => sec.items.forEach(it => {
+    const photos = ST.imgs[it[0]] || [];
+    photos.forEach(p => allPhotos.push({ src: p.src, q: it[1] }));
+  }));
+  if (!allPhotos.length) return '';
+  const items = allPhotos.map((p, i) => `
+    <div class="rpt-photo-item">
+      <img src="${p.src}" alt="Photo ${i+1}" onclick="openLBdirect('${p.src}')" title="${p.q}">
+      <div class="rpt-photo-label" title="${p.q}">${p.q.substring(0,28)}…</div>
+    </div>`).join('');
+  return `<div class="rpt-section" style="margin-top:1rem">
+    <h4>Audit photos (${allPhotos.length})</h4>
+    <div class="rpt-photo-grid">${items}</div>
+  </div>`;
+}
+
+function openLBdirect(src) {
+  document.getElementById('lb-img').src = src;
+  document.getElementById('lb').classList.add('open');
 }
 
 function flattenReport(r, p) {
@@ -774,6 +917,7 @@ function flattenReport(r, p) {
     `Zonal VM: ${p.meta.vm}  |  FHC Manager: ${p.meta.mgr}`,
     `Grade: ${p.meta.grade}  |  Visit type: ${p.meta.vtype}`,
     `Overall score: ${r.overallScore}/100 — ${r.scoreLabel}`,
+    `Photos attached: ${photoCount()}`,
     ``,
     `EXECUTIVE SUMMARY`, r.executiveSummary, ``,
     `MANDATORY PARAMETERS`, r.mandatoryNote, ``,
