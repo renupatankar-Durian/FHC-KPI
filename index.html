@@ -304,25 +304,30 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
   <div class="card">
     <div class="card-title">Current audit status</div>
     <div class="stat-rows" id="share-stats"></div>
-    <div class="btn-row" style="justify-content:flex-start;margin-top:14px;margin-bottom:0">
-      <button class="btn btn-p" onclick="saveAudit()">Save & generate share code</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Save audit to file</div>
+    <p style="font-size:12px;color:var(--ink3);margin-bottom:14px;line-height:1.6">Downloads a <code style="font-size:11px;background:var(--sur2);padding:1px 5px;border-radius:4px">.json</code> file of the entire audit — answers, notes, and photos. Share this file via WhatsApp, email, or Drive with your manager. They upload it below to view the full audit on their device.</p>
+    <div class="btn-row" style="justify-content:flex-start;margin:0">
+      <button class="btn btn-p" onclick="saveAudit()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download audit file
+      </button>
     </div>
-    <div id="code-area" style="display:none">
-      <div class="code-box">
-        <div class="code-val" id="share-code">⸺</div>
-        <div class="code-hint">Share this code — any team member can enter it below to load this audit</div>
-      </div>
-      <button class="btn" style="width:100%" onclick="copyCode()">Copy code</button>
-      <span class="toast" id="code-toast">Copied!</span>
+    <div id="code-area" style="display:none;margin-top:12px">
+      <div class="info-msg info-g">✓ Audit file downloaded. Share it via WhatsApp, email, or Google Drive with your reporting manager.</div>
     </div>
   </div>
 
   <div class="card">
     <div class="card-title">Load a saved audit</div>
-    <div class="code-load">
-      <input id="load-inp" placeholder="Enter share code" maxlength="8" oninput="this.value=this.value.toUpperCase()">
-      <button class="btn btn-p" onclick="loadAudit()">Load</button>
-    </div>
+    <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.6">Upload a <code style="font-size:11px;background:var(--sur2);padding:1px 5px;border-radius:4px">.json</code> audit file received from a VM to load their full audit.</p>
+    <input type="file" accept=".json" id="load-file" style="display:none" onchange="handleLoadFile(this)">
+    <button class="btn btn-p" onclick="loadAudit()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Upload audit file
+    </button>
     <div id="load-msg"></div>
   </div>
 
@@ -728,9 +733,8 @@ function genCode() {
   return Array.from({length:8}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
 }
 
-async function saveAudit() {
-  const code = genCode();
-  const meta = {
+function getMeta() {
+  return {
     store: document.getElementById('f-store').value,
     date:  document.getElementById('f-date').value,
     vm:    document.getElementById('f-vm').value,
@@ -738,35 +742,52 @@ async function saveAudit() {
     grade: document.getElementById('f-grade').value,
     vtype: document.getElementById('f-vtype').value,
   };
-  const payload = JSON.stringify({ meta, a: ST.a, t: ST.t, n: ST.n, imgs: ST.imgs });
-  try {
-    await window.storage.set('fhc:' + code, payload, true);
-  } catch(e) {}
-  document.getElementById('share-code').textContent = code;
+}
+
+function saveAudit() {
+  const meta = getMeta();
+  const payload = { meta, a: ST.a, t: ST.t, n: ST.n, imgs: ST.imgs };
+  // Save to localStorage for this device
+  try { localStorage.setItem('fhc_audit_current', JSON.stringify(payload)); } catch(e) {}
+  // Also trigger file download for cross-device sharing
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const store = meta.store ? meta.store.replace(/\s+/g,'-') : 'store';
+  const date  = meta.date || new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `FHC-Audit-${store}-${date}.json`; a.click();
+  URL.revokeObjectURL(url);
   document.getElementById('code-area').style.display = 'block';
 }
 
-async function loadAudit() {
-  const code = document.getElementById('load-inp').value.trim().toUpperCase();
-  const msg  = document.getElementById('load-msg');
-  if (code.length < 4) { msg.innerHTML = `<div class="info-msg info-r">Please enter a valid 8-character share code.</div>`; return; }
-  msg.innerHTML = `<div class="info-msg info-b">Loading…</div>`;
-  try {
-    const res = await window.storage.get('fhc:' + code, true);
-    if (!res) { msg.innerHTML = `<div class="info-msg info-r">No audit found for that code. Please check and try again.</div>`; return; }
-    const data = JSON.parse(res.value);
-    Object.assign(ST.a, data.a||{}); Object.assign(ST.t, data.t||{}); Object.assign(ST.n, data.n||{});
-    if (data.imgs) Object.assign(ST.imgs, data.imgs);
-    const m = data.meta || {};
-    ['store','date','vm','mgr','grade','vtype'].forEach(k => {
-      const el = document.getElementById('f-'+k);
-      if (el && m[k]) el.value = m[k];
-    });
-    renderChecklist();
-    msg.innerHTML = `<div class="info-msg info-g">✓ Audit loaded. Switch to Checklist to view and continue.</div>`;
-  } catch(e) {
-    msg.innerHTML = `<div class="info-msg info-r">Could not load audit. Please try again.</div>`;
-  }
+function loadAudit() {
+  const fileInput = document.getElementById('load-file');
+  fileInput.click();
+}
+
+function handleLoadFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const msg = document.getElementById('load-msg');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      Object.assign(ST.a, data.a||{}); Object.assign(ST.t, data.t||{}); Object.assign(ST.n, data.n||{});
+      if (data.imgs) Object.assign(ST.imgs, data.imgs);
+      const m = data.meta || {};
+      ['store','date','vm','mgr','grade','vtype'].forEach(k => {
+        const el = document.getElementById('f-'+k);
+        if (el && m[k]) el.value = m[k];
+      });
+      renderChecklist();
+      msg.innerHTML = `<div class="info-msg info-g">✓ Audit loaded successfully. Switch to Checklist tab to view.</div>`;
+    } catch(err) {
+      msg.innerHTML = `<div class="info-msg info-r">Could not read file. Please upload a valid FHC audit JSON file.</div>`;
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
 }
 
 function copyCode() {
@@ -822,68 +843,112 @@ function buildPayload() {
   return { meta, tot, done, yes, no, pct: tot>0?Math.round((done/tot)*100):0, findings, redFlags };
 }
 
-async function genReport() {
+function genReport() {
   const p = buildPayload();
-  document.getElementById('report-out').innerHTML = `<div class="spinner-wrap"><div class="spin"></div>Generating audit report…</div>`;
+  const out = document.getElementById('report-out');
   document.getElementById('copy-rep-btn').style.display = 'none';
+  if (p.done === 0) { out.innerHTML = `<div class="err-card">Please answer some checklist questions before generating a report.</div>`; return; }
 
-  const prompt = `You are generating a professional store audit report for a Durian furniture store's FHC (Full Home Customization) section covering modular kitchens and wardrobes.
+  const score = p.pct;
+  const scoreLabel = score>=85?'Excellent':score>=70?'Good':score>=55?'Adequate':score>=40?'Below Standard':'Poor';
+  const col = score>=70?'var(--g)':score>=50?'var(--am)':'var(--r)';
 
-VISIT: Store: ${p.meta.store} | Date: ${p.meta.date} | VM: ${p.meta.vm} | FHC Manager: ${p.meta.mgr} | Grade: ${p.meta.grade} | Type: ${p.meta.vtype}
-COMPLETION: ${p.done}/${p.tot} (${p.pct}%) | Yes: ${p.yes} | No: ${p.no}
-FINDINGS: ${JSON.stringify(p.findings)}
-RED FLAGS: ${p.redFlags.join(' | ') || 'None'}
+  // Mandatory section analysis
+  const mandSecs = SECS.filter(s => s.badge === 'm');
+  const mandItems = mandSecs.flatMap(s => s.items.filter(i => i[2] !== 3));
+  const mandYes = mandItems.filter(i => ST.a[i[0]] === 'y').length;
+  const mandNo  = mandItems.filter(i => ST.a[i[0]] === 'n').length;
+  const mandPct = mandItems.length > 0 ? Math.round((mandYes/mandItems.length)*100) : 0;
+  const mandFailItems = mandSecs.flatMap(s => s.items.filter(i => ST.a[i[0]] === 'n').map(i => i[1]));
 
-Return ONLY valid JSON, no markdown fences:
-{"executiveSummary":"3-4 sentence summary of overall visit and compliance","overallScore":0,"scoreLabel":"Poor/Below Standard/Adequate/Good/Excellent","mandatoryNote":"1-2 sentences on the 4 mandatory parameters","sectionFindings":[{"section":"name","status":"Pass/Fail/Partial","point":"one concise sentence"}],"redFlags":["concise escalation item"],"recommendations":["rec 1","rec 2","rec 3"],"nextSteps":["step with owner","step with owner"],"followUp":"suggested timeline"}`;
+  const mandNote = mandNo === 0
+    ? `All mandatory FHC parameters — Cleanliness & Hygiene, Sample Display, Boxes & Packing, Damaged Items — are compliant (${mandYes}/${mandItems.filter(i=>ST.a[i[0]]).length} checked). The section meets the management directive requirements for this visit.`
+    : `${mandNo} mandatory item${mandNo>1?'s':''} found non-compliant (${mandPct}% compliant on mandatory checks). Issues: ${mandFailItems.slice(0,3).map(q=>q.substring(0,55)+'…').join('; ')}. Immediate corrective action required.`;
 
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1200,
-        messages: [{ role: 'user', content: prompt }] })
-    });
-    const data = await res.json();
-    const txt = data.content?.filter(c => c.type === 'text').map(c => c.text).join('');
-    const rpt = JSON.parse(txt.replace(/```json|```/g,'').trim());
-    renderReport(rpt, p);
-    _reportTxt = flattenReport(rpt, p);
-    document.getElementById('copy-rep-btn').style.display = '';
-  } catch(e) {
-    document.getElementById('report-out').innerHTML = `<div class="err-card">Could not generate the report. Please ensure the checklist has answers filled in and try again.</div>`;
-  }
-}
+  // Section findings
+  const secFindings = SECS.map(sec => {
+    const ansItems = sec.items.filter(i => i[2] !== 3);
+    const answered = ansItems.filter(i => ST.a[i[0]]);
+    if (!answered.length) return null;
+    const yes = answered.filter(i => ST.a[i[0]] === 'y').length;
+    const no  = answered.filter(i => ST.a[i[0]] === 'n').length;
+    const status = no === 0 ? 'Pass' : yes === 0 ? 'Fail' : 'Partial';
+    const firstIssue = sec.items.find(i => ST.a[i[0]] === 'n');
+    const point = no === 0
+      ? `All ${yes} answered item${yes>1?'s':''} compliant`
+      : `${no} non-compliant — ${firstIssue ? firstIssue[1].substring(0,58)+'…' : ''}`;
+    return { sec, status, point, yes, no };
+  }).filter(Boolean);
 
-function renderReport(r, p) {
-  const sc = r.overallScore;
-  const col = sc >= 80 ? 'var(--g)' : sc >= 55 ? 'var(--am)' : 'var(--r)';
-  const secRows = (r.sectionFindings||[]).map(s => {
-    const st = s.status === 'Pass' ? 's-pass' : s.status === 'Fail' ? 's-fail' : 's-part';
-    return `<div class="rpt-sec-row"><span>${s.section} — ${s.point}</span><span class="rpt-sec-status ${st}">${s.status}</span></div>`;
+  // Red flags
+  const rfList = [];
+  SECS.forEach(sec => sec.items.forEach(it => {
+    if (it[3] && ST.a[it[0]] === 'n') rfList.push({ secTitle: sec.title, q: it[1] });
+  }));
+
+  // All non-compliant for recommendations
+  const noItems = [];
+  SECS.forEach(sec => sec.items.forEach(it => { if (ST.a[it[0]] === 'n') noItems.push({ sec: sec.title, q: it[1] }); }));
+  const followupDays = rfList.length > 2 ? '7' : rfList.length > 0 ? '14' : '30';
+
+  const secRows = secFindings.map(({sec,status,point}) => {
+    const cls = status==='Pass'?'s-pass':status==='Fail'?'s-fail':'s-part';
+    return `<div class="rpt-sec-row"><span>${sec.title} — ${point}</span><span class="rpt-sec-status ${cls}">${status}</span></div>`;
   }).join('');
-  const rfRows = (r.redFlags||[]).length
-    ? (r.redFlags||[]).map(f => `<div class="rpt-flag"><span>🚩</span><span>${f}</span></div>`).join('')
-    : `<div style="font-size:13px;color:var(--g)">No red flags raised.</div>`;
-  const recs = (r.recommendations||[]).map(rc => `<div class="rpt-li">${rc}</div>`).join('');
-  const steps = (r.nextSteps||[]).map(s => `<div class="rpt-li">${s}</div>`).join('');
 
-  document.getElementById('report-out').innerHTML = `
+  const rfRows = rfList.length
+    ? rfList.map(f=>`<div class="rpt-flag"><span>🚩</span><span><strong>${f.secTitle}:</strong> ${f.q}</span></div>`).join('')
+    : `<div style="font-size:13px;color:var(--g)">No red flags raised during this visit.</div>`;
+
+  const recs = noItems.length > 0
+    ? noItems.slice(0,5).map(i=>`<div class="rpt-li">Address in <strong>${i.sec}</strong>: ${i.q.substring(0,75)}${i.q.length>75?'…':''}</div>`).join('')
+    : `<div class="rpt-li">Maintain current compliance standards across all sections.</div>`;
+
+  const steps = noItems.length > 0
+    ? [...noItems.slice(0,3).map(i=>`<div class="rpt-li">Store FHC manager to resolve: ${i.q.substring(0,65)}${i.q.length>65?'…':''}</div>`),
+       `<div class="rpt-li">VM follow-up visit within <strong>${followupDays} days</strong> to verify corrective actions.</div>`].join('')
+    : `<div class="rpt-li">Continue maintaining standards. Next scheduled VM visit as per zonal plan.</div>`;
+
+  out.innerHTML = `
     <div class="rpt-score">
-      <div><div class="rpt-score-num" style="color:${col}">${sc}</div><div class="rpt-score-lbl" style="color:${col}">${r.scoreLabel}</div></div>
+      <div><div class="rpt-score-num" style="color:${col}">${score}</div><div class="rpt-score-lbl" style="color:${col}">${scoreLabel}</div></div>
       <div style="border-left:1px solid var(--bd);padding-left:14px;flex:1">
-        <div style="font-size:13px;font-weight:600;margin-bottom:2px">${p.meta.store} — FHC Audit</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:2px">${p.meta.store||'FHC Store'} — FHC Section Audit</div>
         <div style="font-size:12px;color:var(--ink3)">${p.meta.date} · ${p.meta.vm} · ${p.meta.vtype}</div>
-        <div style="font-size:12px;color:var(--ink3)">${p.done}/${p.tot} answered · ${p.yes} compliant · ${p.redFlags.length} red flag${p.redFlags.length!==1?'s':''}</div>
+        <div style="font-size:12px;color:var(--ink3)">${p.done}/${p.tot} answered · ${p.yes} compliant · ${rfList.length} red flag${rfList.length!==1?'s':''} · ${photoCount()} photo${photoCount()!==1?'s':''}</div>
       </div>
     </div>
-    <div class="rpt-section"><h4>Executive summary</h4><p>${r.executiveSummary}</p></div>
-    <div class="rpt-section"><h4>Mandatory parameters</h4><p>${r.mandatoryNote}</p></div>
+    <div class="rpt-section"><h4>Executive summary</h4>
+      <p>FHC section audit conducted at <strong>${p.meta.store||'the store'}</strong> on ${p.meta.date||'—'} by Zonal VM <strong>${p.meta.vm||'—'}</strong> (${p.meta.vtype}). ${p.done} of ${p.tot} checklist items were answered, with ${p.yes} compliant and ${p.no} non-compliant. Overall compliance score: <strong>${score}% — ${scoreLabel}</strong>. ${rfList.length>0?`<strong style="color:var(--r)">${rfList.length} red flag${rfList.length>1?'s':''} raised requiring immediate escalation.</strong>`:'No red flags raised — section meeting base standards.'}</p>
+    </div>
+    <div class="rpt-section"><h4>Mandatory parameters (management directive)</h4><p>${mandNote}</p></div>
     <div class="rpt-section"><h4>Section findings</h4>${secRows}</div>
     <div class="rpt-section"><h4>Red flags — immediate action required</h4>${rfRows}</div>
-    <div class="rpt-section"><h4>Recommendations</h4>${recs}</div>
+    <div class="rpt-section"><h4>Priority recommendations</h4>${recs}</div>
     <div class="rpt-section"><h4>Next steps</h4>${steps}</div>
-    <div style="font-size:11px;color:var(--ink3);padding-top:8px;border-top:1px solid var(--bd)">Suggested follow-up: ${r.followUp}</div>
+    <div style="font-size:11px;color:var(--ink3);padding-top:8px;border-top:1px solid var(--bd)">
+      Report generated: ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})} · Suggested follow-up within ${followupDays} days · ${photoCount()} photo${photoCount()!==1?'s':''} attached
+    </div>
     ${renderReportPhotos()}`;
+
+  _reportTxt = [
+    'FHC SECTION AUDIT REPORT','─'.repeat(44),
+    `Store: ${p.meta.store||'—'}  |  Date: ${p.meta.date||'—'}`,
+    `Zonal VM: ${p.meta.vm||'—'}  |  FHC Manager: ${p.meta.mgr||'—'}`,
+    `Store Grade: ${p.meta.grade||'—'}  |  Visit type: ${p.meta.vtype}`,
+    `Score: ${score}/100 — ${scoreLabel}  |  Photos: ${photoCount()}`,'',
+    'MANDATORY PARAMETERS', mandNote,'',
+    'SECTION FINDINGS',
+    ...secFindings.map(({sec,status,point})=>`• ${sec.title}: ${status} — ${point}`),'',
+    'RED FLAGS',
+    ...(rfList.length?rfList.map(f=>`🚩 ${f.secTitle}: ${f.q}`):['None']),'',
+    'RECOMMENDATIONS',
+    ...noItems.slice(0,5).map((i,n)=>`${n+1}. ${i.sec}: ${i.q}`),'',
+    'NEXT STEPS',
+    ...noItems.slice(0,3).map((i,n)=>`${n+1}. Store manager to address: ${i.q}`),
+    `${noItems.length+1}. VM follow-up within ${followupDays} days.`,
+  ].join('\n');
+  document.getElementById('copy-rep-btn').style.display = '';
 }
 
 function renderReportPhotos() {
@@ -909,73 +974,75 @@ function openLBdirect(src) {
   document.getElementById('lb').classList.add('open');
 }
 
-function flattenReport(r, p) {
-  return [
-    `FHC SECTION AUDIT REPORT`,
-    `${'─'.repeat(40)}`,
-    `Store: ${p.meta.store}  |  Date: ${p.meta.date}`,
-    `Zonal VM: ${p.meta.vm}  |  FHC Manager: ${p.meta.mgr}`,
-    `Grade: ${p.meta.grade}  |  Visit type: ${p.meta.vtype}`,
-    `Overall score: ${r.overallScore}/100 — ${r.scoreLabel}`,
-    `Photos attached: ${photoCount()}`,
-    ``,
-    `EXECUTIVE SUMMARY`, r.executiveSummary, ``,
-    `MANDATORY PARAMETERS`, r.mandatoryNote, ``,
-    `SECTION FINDINGS`,
-    ...(r.sectionFindings||[]).map(s => `• ${s.section}: ${s.status} — ${s.point}`), ``,
-    `RED FLAGS`,
-    ...(r.redFlags||[]).length ? (r.redFlags||[]).map(f=>`🚩 ${f}`) : ['None'], ``,
-    `RECOMMENDATIONS`,
-    ...(r.recommendations||[]).map((rc,i)=>`${i+1}. ${rc}`), ``,
-    `NEXT STEPS`,
-    ...(r.nextSteps||[]).map((s,i)=>`${i+1}. ${s}`), ``,
-    `Follow-up: ${r.followUp}`,
-  ].join('\n');
-}
-
 function copyReport() {
   navigator.clipboard.writeText(_reportTxt).catch(()=>{});
   showToast('rep-toast');
 }
 
 // ─────────────────────────────────────────────
-//  SLIDES
+//  SLIDES — template-based, no API needed
 // ─────────────────────────────────────────────
-async function genSlides() {
+function genSlides() {
   const p = buildPayload();
-  document.getElementById('slides-out').innerHTML = `<div class="spinner-wrap"><div class="spin"></div>Generating presentation…</div>`;
+  const out = document.getElementById('slides-out');
   document.getElementById('copy-sl-btn').style.display = 'none';
+  if (p.done === 0) { out.innerHTML = `<div class="err-card">Please answer some checklist questions before generating slides.</div>`; return; }
 
-  const prompt = `Create a 5-slide executive presentation for a Durian FHC (modular kitchens & wardrobes) store audit.
+  const score = p.pct;
+  const rfList = [];
+  SECS.forEach(sec => sec.items.forEach(it => { if (it[3] && ST.a[it[0]] === 'n') rfList.push(`${sec.title}: ${it[1].substring(0,60)}…`); }));
+  const noItems = [];
+  SECS.forEach(sec => sec.items.forEach(it => { if (ST.a[it[0]] === 'n') noItems.push({ sec: sec.title, q: it[1] }); }));
+  const okItems = [];
+  SECS.forEach(sec => sec.items.forEach(it => { if (ST.a[it[0]] === 'y') okItems.push(sec.title); }));
+  const topOkSecs = [...new Set(okItems)].slice(0,3);
+  const followupDays = rfList.length > 2 ? '7' : rfList.length > 0 ? '14' : '30';
 
-Store: ${p.meta.store} | Date: ${p.meta.date} | VM: ${p.meta.vm} | Score: ${p.pct}% | Compliant: ${p.yes}/${p.tot} | Red flags: ${p.redFlags.length}
-Red flags: ${p.redFlags.join('; ')||'None'}
-Non-compliant sections: ${p.findings.filter(f=>f.items.some(i=>i.ans==='No')).map(f=>f.section).join(', ')||'None'}
-
-Return ONLY a JSON array, no markdown:
-[
-  {"slide":1,"style":"sl-1","title":"FHC Audit Overview","subtitle":"${p.meta.store} · ${p.meta.date}","stat":"${p.pct}%","statLabel":"checklist completion","bullets":["VM: ${p.meta.vm}","Visit: ${p.meta.vtype}","Compliant: ${p.yes} items","Red flags: ${p.redFlags.length}"]},
-  {"slide":2,"style":"sl-2","title":"Key Observations","subtitle":"What was found on the floor","bullets":["observation 1","observation 2","observation 3","observation 4","observation 5"]},
-  {"slide":3,"style":"sl-3","title":"Red Flags","subtitle":"Requires immediate action","bullets":["action 1","action 2","action 3"]},
-  {"slide":4,"style":"sl-4","title":"Recommendations","subtitle":"For store team implementation","bullets":["rec 1","rec 2","rec 3","rec 4"]},
-  {"slide":5,"style":"sl-5","title":"Next Steps","subtitle":"Owner & timeline","bullets":["step 1","step 2","step 3"]}
-]
-Fill with real insights from the audit data. Max 12 words per bullet.`;
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 900,
-        messages: [{ role: 'user', content: prompt }] })
-    });
-    const data = await res.json();
-    const txt = data.content?.filter(c => c.type === 'text').map(c => c.text).join('');
-    _slideData = JSON.parse(txt.replace(/```json|```/g,'').trim());
-    renderSlides(_slideData);
-    document.getElementById('copy-sl-btn').style.display = '';
-  } catch(e) {
-    document.getElementById('slides-out').innerHTML = `<div class="err-card">Could not generate slides. Fill in more checklist answers and try again.</div>`;
-  }
+  _slideData = [
+    {
+      slide:1, style:'sl-1', title:'FHC Audit Overview',
+      subtitle:`${p.meta.store||'Durian Store'} · ${p.meta.date||'—'}`,
+      stat: score+'%', statLabel:'checklist completion',
+      bullets:[
+        `Zonal VM: ${p.meta.vm||'—'}`,
+        `Visit type: ${p.meta.vtype}`,
+        `${p.yes} compliant · ${p.no} non-compliant`,
+        `${rfList.length} red flag${rfList.length!==1?'s':''} raised`,
+        `${photoCount()} photo${photoCount()!==1?'s':''} captured`,
+      ]
+    },
+    {
+      slide:2, style:'sl-2', title:'Key Observations',
+      subtitle:'What was found on the floor',
+      bullets: noItems.length > 0
+        ? noItems.slice(0,5).map(i=>`Non-compliant — ${i.sec}: ${i.q.substring(0,50)}…`)
+        : ['All checked items found compliant', ...topOkSecs.map(s=>`${s} — meeting standards`)]
+    },
+    {
+      slide:3, style:'sl-3', title:'Red Flags',
+      subtitle:'Requires immediate escalation & action',
+      bullets: rfList.length > 0 ? rfList.slice(0,5) : ['No red flags raised during this visit — section is compliant']
+    },
+    {
+      slide:4, style:'sl-4', title:'Recommendations',
+      subtitle:'For store team to implement',
+      bullets: noItems.length > 0
+        ? noItems.slice(0,4).map(i=>`Resolve in ${i.sec}: ${i.q.substring(0,48)}…`)
+        : ['Maintain current standards across all sections', 'Continue regular FHC team training', 'Keep sample displays updated per planogram']
+    },
+    {
+      slide:5, style:'sl-5', title:'Next Steps',
+      subtitle:'Owner & timeline',
+      bullets:[
+        ...noItems.slice(0,2).map(i=>`FHC Manager: ${i.q.substring(0,52)}…`),
+        `VM follow-up visit within ${followupDays} days`,
+        `Log corrective actions in visit report`,
+        `Escalate red flags to Nishita immediately`,
+      ]
+    },
+  ];
+  renderSlides(_slideData);
+  document.getElementById('copy-sl-btn').style.display = '';
 }
 
 function renderSlides(slides) {
