@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FHC Audit — Durian Stores</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g:#0F6E56;--gm:#1D9E75;--gl:#E1F5EE;--gp:#F0FAF6;
+  --r:#A32D2D;--rl:#FCEBEB;
+  --am:#854F0B;--al:#FAEEDA;
+  --bl:#185FA5;--bll:#EBF3FC;
+  --ink:#1a1a1a;--ink2:#555;--ink3:#999;
+  --sur:#fff;--sur2:#F7F7F5;--sur3:#EEECEA;
+  --bd:#E8E6E3;--bd2:#D0CEC9;
+  --rad:10px;--rad-lg:14px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+  --shadow-lg:0 4px 20px rgba(0,0,0,.1),0 1px 4px rgba(0,0,0,.06);
+}
+body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-height:100vh;padding-bottom:3rem}
+
+/* ── LAYOUT ── */
+.shell{max-width:820px;margin:0 auto;padding:1.5rem 1rem}
+
+/* ── TOP BAR ── */
+.topbar{background:var(--sur);border:1px solid var(--bd);border-radius:var(--rad-lg);padding:1rem 1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:180px}
+.brand-mark{width:34px;height:34px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.brand-mark svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.brand-text{font-size:14px;font-weight:600;color:var(--ink);line-height:1.2}
+.brand-sub{font-size:11px;color:var(--ink3);font-weight:400}
+.tabs{display:flex;background:var(--sur2);border-radius:8px;padding:3px;gap:2px;border:1px solid var(--bd)}
+.tab{font-size:12px;font-weight:500;padding:6px 14px;border-radius:6px;border:none;background:transparent;color:var(--ink2);cursor:pointer;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.tab.on{background:var(--sur);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.tab svg{width:13px;height:13px;flex-shrink:0}
+.prog-chip{font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;background:var(--gl);color:var(--g);border:1px solid rgba(15,110,86,.2);font-family:'DM Mono',monospace}
+
+/* ── PANELS ── */
+.panel{display:none}.panel.on{display:block}
+
+/* ── META CARD ── */
+.card{background:var(--sur);border:1px solid var(--bd);border-radius:var(--rad-lg);padding:1.25rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+.card-title{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.85rem}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mf label{font-size:11px;font-weight:500;color:var(--ink2);display:block;margin-bottom:4px}
+.mf input,.mf select{width:100%;font-size:13px;font-family:'DM Sans',sans-serif;padding:8px 10px;border:1px solid var(--bd2);border-radius:7px;background:var(--sur2);color:var(--ink);outline:none;transition:border .15s}
+.mf input:focus,.mf select:focus{border-color:var(--gm);background:var(--sur)}
+
+/* ── PROGRESS ── */
+.prog-wrap{margin-bottom:1rem}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.prog-label{font-size:12px;color:var(--ink2)}
+.prog-pct{font-size:13px;font-weight:600;color:var(--g);font-family:'DM Mono',monospace}
+.bar-track{height:7px;background:var(--sur3);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--gm),var(--g));border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.tallies{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.tally{font-size:11px;font-weight:500;padding:4px 11px;border-radius:20px;border:1px solid}
+.t-r{background:var(--rl);color:var(--r);border-color:rgba(163,45,45,.25)}
+.t-a{background:var(--al);color:var(--am);border-color:rgba(133,79,11,.25)}
+.t-g{background:var(--gl);color:var(--g);border-color:rgba(15,110,86,.25)}
+
+/* ── SECTIONS ── */
+.sec{background:var(--sur);border:1px solid var(--bd);border-radius:var(--rad-lg);overflow:hidden;margin-bottom:8px;box-shadow:var(--shadow)}
+.sec-hd{display:flex;align-items:center;gap:10px;padding:.85rem 1.1rem;cursor:pointer;user-select:none;transition:background .12s}
+.sec-hd:hover{background:var(--sur2)}
+.sec-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-m{background:var(--g)}
+.dot-r{background:var(--bl)}
+.sec-title{font-size:13px;font-weight:600;color:var(--ink);flex:1}
+.sec-badge{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;letter-spacing:.03em}
+.b-m{background:var(--gl);color:var(--g)}
+.b-r{background:var(--bll);color:var(--bl)}
+.sec-prog{font-size:11px;font-weight:600;color:var(--ink3);font-family:'DM Mono',monospace;white-space:nowrap}
+.chev{width:16px;height:16px;color:var(--ink3);transition:transform .2s;flex-shrink:0}
+.chev.open{transform:rotate(180deg)}
+
+/* ── ITEMS ── */
+.sec-body{border-top:1px solid var(--bd)}
+.item{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;padding:.75rem 1.1rem;border-bottom:1px solid var(--bd);transition:background .1s}
+.item:last-of-type.li{border-bottom:none}
+.item:hover{background:var(--sur2)}
+.item-q{font-size:13px;color:var(--ink);line-height:1.5;margin-bottom:5px}
+.item-q.sub{color:var(--ink3);font-size:12px;font-style:italic}
+.flags{display:flex;gap:4px;flex-wrap:wrap;padding-top:1px;justify-content:flex-end}
+.flag{font-size:10px;font-weight:500;padding:2px 7px;border-radius:5px}
+.flag-r{background:var(--rl);color:var(--r)}
+.flag-a{background:var(--al);color:var(--am)}
+
+/* ── ANSWER CONTROLS ── */
+.ans-row{display:flex;gap:4px;flex-wrap:wrap}
+.ab{font-size:12px;font-weight:500;padding:5px 12px;border-radius:6px;border:1.5px solid var(--bd2);background:var(--sur2);color:var(--ink2);cursor:pointer;transition:all .12s;font-family:'DM Sans',sans-serif}
+.ab:hover{border-color:var(--gm);color:var(--g)}
+.ab.y{background:var(--gl);color:var(--g);border-color:var(--gm)}
+.ab.n{background:var(--rl);color:var(--r);border-color:rgba(163,45,45,.5)}
+.ab.na{background:var(--sur3);color:var(--ink2);border-color:var(--bd2)}
+.num-inp{font-size:13px;font-family:'DM Sans',sans-serif;padding:5px 10px;border:1.5px solid var(--bd2);border-radius:6px;background:var(--sur2);color:var(--ink);width:80px;outline:none}
+.num-inp:focus{border-color:var(--gm)}
+.txt-inp{font-size:12px;font-family:'DM Sans',sans-serif;padding:6px 10px;border:1.5px solid var(--bd2);border-radius:6px;background:var(--sur2);color:var(--ink);width:100%;outline:none;margin-top:2px}
+.txt-inp:focus{border-color:var(--gm)}
+
+/* ── NOTES ── */
+.sec-notes{padding:.75rem 1.1rem;background:var(--sur2);border-top:1px solid var(--bd)}
+.sec-notes label{font-size:11px;font-weight:500;color:var(--ink3);display:block;margin-bottom:5px}
+.sec-notes textarea{width:100%;font-size:12px;font-family:'DM Sans',sans-serif;padding:7px 10px;border:1px solid var(--bd2);border-radius:7px;background:var(--sur);color:var(--ink);resize:vertical;min-height:50px;outline:none}
+.sec-notes textarea:focus{border-color:var(--gm)}
+
+/* ── BUTTONS ── */
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem;flex-wrap:wrap}
+.btn{font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;padding:8px 18px;border-radius:8px;cursor:pointer;border:1px solid var(--bd2);background:var(--sur2);color:var(--ink);transition:all .15s}
+.btn:hover{background:var(--sur3)}
+.btn-p{background:var(--g);border-color:var(--g);color:#fff}
+.btn-p:hover{background:#0a5a47;border-color:#0a5a47}
+.btn-b{background:var(--bl);border-color:var(--bl);color:#fff}
+.btn-b:hover{opacity:.9}
+.btn-sm{font-size:12px;padding:6px 13px}
+
+/* ── SHARE TAB ── */
+.code-box{border:2px dashed var(--gm);border-radius:var(--rad-lg);padding:1.5rem;text-align:center;background:var(--gp);margin:12px 0}
+.code-val{font-size:34px;font-weight:600;color:var(--g);letter-spacing:.3em;font-family:'DM Mono',monospace}
+.code-hint{font-size:12px;color:var(--ink3);margin-top:4px}
+.code-load{display:flex;gap:8px;margin-top:12px}
+.code-load input{flex:1;font-size:16px;font-family:'DM Mono',monospace;padding:9px 12px;border:1.5px solid var(--bd2);border-radius:8px;background:var(--sur2);color:var(--ink);outline:none;letter-spacing:.2em;text-align:center;text-transform:uppercase}
+.code-load input:focus{border-color:var(--gm)}
+.stat-rows .row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid var(--bd)}
+.stat-rows .row:last-child{border-bottom:none}
+.row-val{font-weight:600}
+.toast{display:inline-block;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;background:var(--gl);color:var(--g);opacity:0;transition:opacity .3s;margin-left:8px}
+.toast.show{opacity:1}
+.email-block{background:var(--sur2);border-radius:var(--rad);padding:1rem;margin-top:10px}
+.email-block p{font-size:12px;color:var(--ink3);margin-bottom:8px}
+.ef{margin-bottom:6px}
+.ef label{font-size:11px;font-weight:500;color:var(--ink2);display:block;margin-bottom:3px}
+.ef input{width:100%;font-size:12px;font-family:'DM Sans',sans-serif;padding:6px 9px;border:1px solid var(--bd2);border-radius:6px;background:var(--sur);color:var(--ink);outline:none}
+.info-msg{font-size:12px;padding:8px 12px;border-radius:7px;margin-top:8px}
+.info-g{background:var(--gl);color:var(--g)}
+.info-r{background:var(--rl);color:var(--r)}
+.info-b{background:var(--bll);color:var(--bl)}
+
+/* ── REPORT TAB ── */
+.gen-desc{font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.6}
+.spinner-wrap{text-align:center;padding:2.5rem;color:var(--ink3);font-size:13px}
+.spin{width:22px;height:22px;border:2.5px solid var(--bd2);border-top-color:var(--gm);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.report-body{font-size:13px;line-height:1.7;color:var(--ink)}
+.rpt-score{display:flex;align-items:center;gap:16px;background:var(--sur2);border-radius:var(--rad);padding:1rem 1.1rem;margin-bottom:1rem;border:1px solid var(--bd)}
+.rpt-score-num{font-size:42px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
+.rpt-score-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.rpt-section{margin-bottom:1.1rem}
+.rpt-section h4{font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--bd)}
+.rpt-section p{font-size:13px;color:var(--ink);line-height:1.65;margin-bottom:4px}
+.rpt-sec-row{display:flex;justify-content:space-between;align-items:flex-start;font-size:13px;padding:5px 0;border-bottom:1px solid var(--bd);gap:12px}
+.rpt-sec-row:last-child{border-bottom:none}
+.rpt-sec-status{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap;flex-shrink:0}
+.s-pass{background:var(--gl);color:var(--g)}
+.s-fail{background:var(--rl);color:var(--r)}
+.s-part{background:var(--al);color:var(--am)}
+.rpt-flag{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--r);padding:5px 0;border-bottom:1px solid rgba(163,45,45,.12)}
+.rpt-flag:last-child{border-bottom:none}
+.rpt-li{font-size:13px;padding:4px 0;border-bottom:1px solid var(--bd);display:flex;gap:8px;align-items:flex-start}
+.rpt-li:last-child{border-bottom:none}
+.rpt-li::before{content:'→';color:var(--ink3);flex-shrink:0;margin-top:1px}
+.err-card{background:var(--rl);border-radius:var(--rad);padding:1rem;font-size:13px;color:var(--r);margin-top:8px}
+
+/* ── SLIDES ── */
+.slides-stack{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.slide{border-radius:var(--rad-lg);padding:1.4rem;position:relative;overflow:hidden}
+.slide-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;opacity:.6}
+.slide-t{font-size:18px;font-weight:700;margin-bottom:3px;line-height:1.2}
+.slide-st{font-size:12px;opacity:.7;margin-bottom:14px}
+.slide-big{font-size:46px;font-weight:700;font-family:'DM Mono',monospace;line-height:1;margin-bottom:3px}
+.slide-big-lbl{font-size:12px;opacity:.65;margin-bottom:14px}
+.slide-ul{list-style:none;padding:0}
+.slide-ul li{font-size:12px;padding:5px 0;display:flex;gap:8px;align-items:flex-start;border-bottom:1px solid rgba(255,255,255,.1)}
+.slide-ul li:last-child{border-bottom:none}
+.slide-ul li::before{content:'▸';flex-shrink:0;margin-top:1px;opacity:.7}
+.sl-1{background:var(--g);color:#fff}
+.sl-2{background:#1a2035;color:#fff}
+.sl-2 .slide-ul li{border-color:rgba(255,255,255,.08)}
+.sl-3{background:var(--rl);color:var(--r)}
+.sl-3 .slide-ul li{border-color:rgba(163,45,45,.12)}
+.sl-3 .slide-ul li::before{color:var(--r)}
+.sl-4{background:var(--bll);color:var(--bl)}
+.sl-4 .slide-ul li{border-color:rgba(24,95,165,.1)}
+.sl-4 .slide-ul li::before{color:var(--bl)}
+.sl-5{background:var(--al);color:var(--am)}
+.sl-5 .slide-ul li{border-color:rgba(133,79,11,.1)}
+.sl-5 .slide-ul li::before{color:var(--am)}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto}
+.modal-bg.open{display:flex}
+.modal{background:var(--sur);border-radius:var(--rad-lg);padding:1.5rem;width:100%;max-width:500px;box-shadow:var(--shadow-lg);margin:auto}
+.modal h2{font-size:15px;font-weight:700;margin-bottom:1.1rem;padding-bottom:.75rem;border-bottom:1px solid var(--bd)}
+.modal-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid var(--bd)}
+.modal-row:last-of-type{border-bottom:none}
+.divider{height:1px;background:var(--bd);margin:.75rem 0}
+
+@media(max-width:600px){
+  .meta-grid{grid-template-columns:1fr}
+  .tabs{overflow-x:auto}
+  .brand-sub{display:none}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div>
+      <div class="brand-text">Durian FHC Audit</div>
+      <div class="brand-sub">Full Home Customization · Store Inspection</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" onclick="showTab('checklist',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="13" height="13" rx="2"/><path d="M5 7H2v14h14v-3"/><path d="m13 14-4-4 2-2 2 2 4-4"/></svg>
+      Checklist
+    </button>
+    <button class="tab" onclick="showTab('share',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Save & Share
+    </button>
+    <button class="tab" onclick="showTab('report',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      AI Report
+    </button>
+  </div>
+  <div class="prog-chip" id="mini-prog">0 / 53</div>
+</div>
+
+<!-- ════════════════ CHECKLIST ════════════════ -->
+<div class="panel on" id="p-checklist">
+  <div class="card">
+    <div class="card-title">Visit details</div>
+    <div class="meta-grid">
+      <div class="mf"><label>Store name</label><input id="f-store" placeholder="e.g. Durian Thane"></div>
+      <div class="mf"><label>Visit date</label><input id="f-date" type="date"></div>
+      <div class="mf"><label>Zonal VM</label><input id="f-vm" placeholder="Full name"></div>
+      <div class="mf"><label>FHC store manager</label><input id="f-mgr" placeholder="Manager name"></div>
+      <div class="mf"><label>Store grade</label>
+        <select id="f-grade"><option value="">Select grade</option><option>A</option><option>B+</option><option>B</option><option>C</option></select>
+      </div>
+      <div class="mf"><label>Visit type</label>
+        <select id="f-vtype"><option>Regular visit</option><option>Surprise audit</option><option>Follow-up visit</option></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="prog-wrap">
+    <div class="prog-row">
+      <span class="prog-label" id="prog-txt">0 of 53 answered</span>
+      <span class="prog-pct" id="prog-pct">0%</span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="bar-fill" style="width:0%"></div></div>
+    <div class="tallies">
+      <div class="tally t-r" id="t-rf">🚩 0 red flags</div>
+      <div class="tally t-a" id="t-img">📷 0 images needed</div>
+      <div class="tally t-g" id="t-ok">✓ 0 compliant</div>
+    </div>
+  </div>
+
+  <div id="secs-root"></div>
+
+  <div class="btn-row">
+    <button class="btn" onclick="resetAll()">Reset checklist</button>
+    <button class="btn btn-p" onclick="showTab('share',document.querySelectorAll('.tab')[1])">Save & Share →</button>
+  </div>
+</div>
+
+<!-- ════════════════ SHARE ════════════════ -->
+<div class="panel" id="p-share">
+  <div class="card">
+    <div class="card-title">Current audit status</div>
+    <div class="stat-rows" id="share-stats"></div>
+    <div class="btn-row" style="justify-content:flex-start;margin-top:14px;margin-bottom:0">
+      <button class="btn btn-p" onclick="saveAudit()">Save & generate share code</button>
+    </div>
+    <div id="code-area" style="display:none">
+      <div class="code-box">
+        <div class="code-val" id="share-code">⸺</div>
+        <div class="code-hint">Share this code — any team member can enter it below to load this audit</div>
+      </div>
+      <button class="btn" style="width:100%" onclick="copyCode()">Copy code</button>
+      <span class="toast" id="code-toast">Copied!</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Load a saved audit</div>
+    <div class="code-load">
+      <input id="load-inp" placeholder="Enter share code" maxlength="8" oninput="this.value=this.value.toUpperCase()">
+      <button class="btn btn-p" onclick="loadAudit()">Load</button>
+    </div>
+    <div id="load-msg"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Email distribution</div>
+    <div class="email-block">
+      <p>As per management directive — reports go to store manager (FHC) and Nishita, CC Nilay.</p>
+      <div class="ef"><label>To</label><input id="e-to" value="Store Manager (FHC), Nishita"></div>
+      <div class="ef"><label>CC</label><input id="e-cc" value="Nilay"></div>
+      <div class="ef"><label>Note for month 1</label><input id="e-note" value="CC'ing on individual report this month. From month 2: combined monthly report only."></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="copyEmailDraft()">Copy email draft</button>
+      <span class="toast" id="email-toast">Copied!</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ REPORT ════════════════ -->
+<div class="panel" id="p-report">
+  <div class="card">
+    <div class="card-title">Audit report <span style="font-weight:400;color:var(--ink3);text-transform:none;letter-spacing:0">— AI generated · for visit report submission</span></div>
+    <p class="gen-desc">Complete the checklist first, then generate a formatted audit report to attach to your visit report and share with the store team.</p>
+    <div class="btn-row" style="justify-content:flex-start;margin:0 0 10px">
+      <button class="btn btn-p" onclick="genReport()">Generate audit report</button>
+      <button class="btn btn-sm" id="copy-rep-btn" style="display:none" onclick="copyReport()">Copy text</button>
+      <span class="toast" id="rep-toast">Copied!</span>
+    </div>
+    <div id="report-out"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Presentation summary <span style="font-weight:400;color:var(--ink3);text-transform:none;letter-spacing:0">— 5-slide executive summary</span></div>
+    <p class="gen-desc">Generates a concise visual presentation summary for management review. Copy the slide content into PowerPoint or Google Slides.</p>
+    <div class="btn-row" style="justify-content:flex-start;margin:0 0 10px">
+      <button class="btn btn-p" onclick="genSlides()">Generate presentation</button>
+      <button class="btn btn-sm" id="copy-sl-btn" style="display:none" onclick="copySlides()">Copy slide text</button>
+      <span class="toast" id="sl-toast">Copied!</span>
+    </div>
+    <div id="slides-out"></div>
+  </div>
+</div>
+
+</div><!-- /shell -->
+
+<!-- ════════════════ MODAL ════════════════ -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h2 id="modal-title">Audit summary</h2>
+    <div id="modal-content"></div>
+    <div style="text-align:right;margin-top:1rem">
+      <button class="btn" onclick="document.getElementById('modal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  DATA  —  61 questions from finalised Excel
+//  [id, question, type(0=yn,1=yna,2=num,3=txt), redFlag, imgReq]
+// ─────────────────────────────────────────────
+const SECS = [
+  { id:'s1', n:1, title:'FHC section accessibility & signage', badge:'r', items:[
+    ['q1','Is the FHC section clearly signposted from the store entrance and main floor?',0,0,1],
+    ['q2','Is the FHC section easy to locate — no ambiguous paths or blocked sight lines?',0,0,0],
+    ['q3','Are there any obstructions blocking the route to the FHC section?',0,1,1],
+  ]},
+  { id:'s2', n:2, title:'Cleanliness & hygiene', badge:'m', items:[
+    ['q4','Are floors in the FHC section swept and free from dust and debris?',0,0,1],
+    ['q5','Are all display unit surfaces, shelves, and countertops clean and wiped down?',0,0,1],
+    ['q6','Is there any dust visible on sample shutters, finish boards, or handles?',0,1,1],
+    ['q7','Are glass panels, mirror finishes, and lacquered surfaces streak-free?',0,0,1],
+    ['q8','Is the pantry / back area of the FHC section clean?',0,0,0],
+    ['q9','Are there any rodent or pest issues in the FHC section or back store?',0,1,1],
+    ['q10','Overall — does the FHC section look presentable and inviting to a walk-in customer?',0,0,0],
+  ]},
+  { id:'s3', n:3, title:'Sample display — correctness & completeness', badge:'m', items:[
+    ['q11','Are all shutter samples in the correct designated positions as per planogram?',0,0,1],
+    ['q12','Are all finish boards and material samples present and placed correctly?',0,0,1],
+    ['q13','Are all labels readable, correctly placed, and facing outward?',0,0,1],
+    ['q14','Are there any missing samples or finish boards?',0,1,0],
+    ['q15','If YES — list missing sample codes / names',3,0,0],
+  ]},
+  { id:'s4', n:4, title:'Boxes, packing material & back-area tidiness', badge:'m', items:[
+    ['q16','Are there any open cartons or packing material visible on the floor or near display units?',0,1,1],
+    ['q17','Is the back-of-section / storage area tidy and well-organised?',0,0,1],
+    ['q18','If boxes must be kept, are they stacked neatly and completely out of customer view?',1,0,0],
+    ['q19','Are delivery or replenishment materials cleared within 24 hours of arrival?',0,0,0],
+  ]},
+  { id:'s5', n:5, title:'Damaged & defective items on display', badge:'m', items:[
+    ['q20','Are all kitchen unit frames and panels on display free from chips or cracks?',0,0,1],
+    ['q21','Are all wardrobe panels, shutters, and frames undamaged and structurally sound?',0,0,1],
+    ['q22','Are all handles, hinges, and hardware accessories properly fitted and undamaged?',0,0,1],
+    ['q23','Are countertop surfaces free from scratches, stains, or discolouration?',0,0,1],
+    ['q24','Are there any sun-faded or worn-out finish boards or panels on the floor?',0,1,1],
+    ['q25','Are there any damaged or defective items currently on display? (Flag immediately)',0,1,1],
+    ['q26','If YES — note SKU ID and brief description of damage',3,0,0],
+  ]},
+  { id:'s6', n:6, title:'Display arrangement & merchandising', badge:'r', items:[
+    ['q27','Are functional demo units (drawers, soft-close, lift-up shutters) working? — physically test them',0,1,1],
+    ['q28','Are there any non-Durian / non-FHC products placed in the FHC section?',0,1,1],
+  ]},
+  { id:'s7', n:7, title:'Lighting', badge:'r', items:[
+    ['q29','Are all track lights and spotlights in the FHC section working — no blown or flickering bulbs?',0,0,1],
+    ['q30','Are lights the correct colour temperature to represent finishes accurately?',0,0,0],
+    ['q31','Is key lighting focused on display countertops, shutter finishes, and feature areas?',0,0,0],
+    ['q32','Are any display areas poorly lit or in shadow?',0,1,1],
+    ['q33','Are CCC panel lights (if present in FHC section) on and working?',1,0,0],
+  ]},
+  { id:'s8', n:8, title:'Price tags & communication', badge:'r', items:[
+    ['q34','Are price tags visible, legible, and placed correctly on all display units?',0,0,1],
+    ['q35','Are price tags in good physical condition — not torn, faded, or missing?',0,0,0],
+    ['q36','Are prices on tags accurate and up to date?',0,1,0],
+  ]},
+  { id:'s9', n:9, title:'In-store branding & signage', badge:'r', items:[
+    ['q37','Is FHC section branding and signage clean, unbroken, and clearly visible?',0,0,1],
+    ['q38','Is there any faded, torn, or peeling communication material in the FHC section?',0,1,1],
+    ['q39','Are all metal stands, acrylic holders, or branding props in good condition?',0,0,1],
+    ['q40','Are brochures, catalogues, or lookbooks stocked and available for customers?',0,0,1],
+    ['q41','Is wall marketing (if any) relevant, current, and in good condition?',0,0,1],
+  ]},
+  { id:'s10', n:10, title:'VM props & styling', badge:'r', items:[
+    ['q42','Are decorative props (plants, vases, small accessories) in place and clean?',1,0,1],
+    ['q43','Are decorative / accent lights switched on during store hours?',1,0,1],
+    ['q44','Are all light bulbs in the FHC display units the correct colour?',0,0,0],
+    ['q45','Are there any damaged or broken VM props in the FHC section?',0,1,1],
+    ['q46','Is the kitchen display styled with accessories to simulate real use?',1,0,1],
+  ]},
+  { id:'s11', n:11, title:'Staff readiness', badge:'r', items:[
+    ['q47','Is a dedicated FHC-trained staff member present during store hours?',0,1,0],
+    ['q48','How many FHC sales staff were present on the day of visit?',2,0,0],
+    ['q49','Was the FHC staff able to demonstrate products and explain finishes confidently?',0,0,0],
+    ['q50','Was staff able to explain the customisation process and timelines?',0,0,0],
+    ['q51','Were customers in the FHC section properly greeted and attended to?',1,0,0],
+  ]},
+  { id:'s12', n:12, title:'Store ambiance & infrastructure', badge:'r', items:[
+    ['q52','Is the AC running continuously during showroom hours in the FHC section?',0,0,0],
+    ['q53','Is inverter backup available for FHC display lighting?',0,0,0],
+    ['q54','Is there any voltage fluctuation affecting lighting or display units?',0,1,0],
+    ['q55','Is there a dedicated customer consultation area in / adjacent to the FHC section?',1,0,1],
+    ['q56','If YES — is the discussion area clean, equipped (catalogue, samples), and maintained?',1,0,1],
+    ['q57','Are the walls and ceiling in the FHC section free from seepage, cracks, or staining?',0,1,1],
+    ['q58','Is the flooring in the FHC section clean and undamaged?',0,0,1],
+  ]},
+  { id:'s13', n:13, title:'Back-store / godown (FHC)', badge:'r', items:[
+    ['q59','Is there a designated storage area for FHC inventory / spare samples?',0,0,0],
+    ['q60','Is the FHC godown / storage area well-maintained and accessible?',0,0,1],
+    ['q61','Is there any old, dumped, or damaged FHC stock in the storage area?',0,1,1],
+  ]},
+];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+const ST = { a:{}, t:{}, n:{} };
+let _reportTxt = '';
+let _slideData = [];
+
+// ─────────────────────────────────────────────
+//  TABS
+// ─────────────────────────────────────────────
+function showTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+  document.getElementById('p-' + id).classList.add('on');
+  btn.classList.add('on');
+  if (id === 'share') refreshShareStats();
+}
+
+// ─────────────────────────────────────────────
+//  RENDER CHECKLIST
+// ─────────────────────────────────────────────
+function renderChecklist() {
+  const root = document.getElementById('secs-root');
+  root.innerHTML = '';
+  SECS.forEach(sec => {
+    const el = document.createElement('div');
+    el.className = 'sec';
+    el.id = 'sec-' + sec.id;
+    const { d, tot } = secProg(sec);
+    el.innerHTML = `
+      <div class="sec-hd" onclick="toggleSec('${sec.id}')">
+        <div class="sec-dot ${sec.badge==='m'?'dot-m':'dot-r'}"></div>
+        <div class="sec-title">${sec.n}. ${sec.title}</div>
+        <span class="sec-badge ${sec.badge==='m'?'b-m':'b-r'}">${sec.badge==='m'?'Mandatory':'Recommended'}</span>
+        <span class="sec-prog" id="sp-${sec.id}">${d}/${tot}</span>
+        <svg class="chev open" id="chev-${sec.id}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="sec-body" id="bd-${sec.id}">
+        ${sec.items.map((it,i) => renderItem(it, i===sec.items.length-1, sec.id)).join('')}
+        <div class="sec-notes">
+          <label>Section notes &amp; observations</label>
+          <textarea placeholder="Add observations, context, or action notes for this section…" oninput="ST.n['${sec.id}']=this.value">${ST.n[sec.id]||''}</textarea>
+        </div>
+      </div>`;
+    root.appendChild(el);
+  });
+  updateScores();
+}
+
+function renderItem(it, isLast, secId) {
+  const [id, q, type, rf, img] = it;
+  const a = ST.a[id];
+  const flags = (rf ? `<span class="flag flag-r">🚩 Red flag</span>` : '') + (img ? `<span class="flag flag-a">📷 Image</span>` : '');
+
+  let ctrl = '';
+  if (type === 0) {
+    ctrl = `<div class="ans-row">
+      <button class="ab${a==='y'?' y':''}" onclick="setAns('${id}','y',this,'${secId}')">Yes</button>
+      <button class="ab${a==='n'?' n':''}" onclick="setAns('${id}','n',this,'${secId}')">No</button>
+    </div>`;
+  } else if (type === 1) {
+    ctrl = `<div class="ans-row">
+      <button class="ab${a==='y'?' y':''}" onclick="setAns('${id}','y',this,'${secId}')">Yes</button>
+      <button class="ab${a==='n'?' n':''}" onclick="setAns('${id}','n',this,'${secId}')">No</button>
+      <button class="ab${a==='na'?' na':''}" onclick="setAns('${id}','na',this,'${secId}')">N/A</button>
+    </div>`;
+  } else if (type === 2) {
+    ctrl = `<input type="number" class="num-inp" min="0" value="${a||''}" placeholder="0" oninput="ST.a['${id}']=this.value;updateScores()">`;
+  } else {
+    ctrl = `<input type="text" class="txt-inp" value="${ST.t[id]||''}" placeholder="Enter details here…" oninput="ST.t['${id}']=this.value">`;
+  }
+
+  return `<div class="item${isLast?' li':''}">
+    <div>
+      <div class="item-q${type===3?' sub':''}">${q}</div>
+      ${ctrl}
+    </div>
+    <div class="flags">${flags}</div>
+  </div>`;
+}
+
+function setAns(id, val, btn, secId) {
+  ST.a[id] = val;
+  const row = btn.closest('.item');
+  row.querySelectorAll('.ab').forEach(b => b.classList.remove('y','n','na'));
+  btn.classList.add(val==='y'?'y':val==='n'?'n':'na');
+  updateScores();
+  const sec = SECS.find(s => s.id === secId);
+  if (sec) { const {d,tot} = secProg(sec); document.getElementById('sp-'+secId).textContent = `${d}/${tot}`; }
+}
+
+function secProg(sec) {
+  const ans = sec.items.filter(i => i[2] !== 3);
+  const d = ans.filter(i => ST.a[i[0]] !== undefined && ST.a[i[0]] !== '').length;
+  return { d, tot: ans.length };
+}
+
+function totals() {
+  let tot=0, done=0, rf=0, img=0, ok=0;
+  SECS.forEach(sec => sec.items.forEach(it => {
+    if (it[2] === 3) return;
+    tot++;
+    const a = ST.a[it[0]];
+    if (a !== undefined && a !== '') done++;
+    if (a === 'n' && it[3]) rf++;
+    if (a === 'n' && it[4]) img++;
+    if (a === 'y') ok++;
+  }));
+  return { tot, done, rf, img, ok };
+}
+
+function updateScores() {
+  const { tot, done, rf, img, ok } = totals();
+  const pct = tot > 0 ? Math.round((done/tot)*100) : 0;
+  document.getElementById('bar-fill').style.width = pct + '%';
+  document.getElementById('prog-txt').textContent = `${done} of ${tot} answered`;
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('mini-prog').textContent = `${done} / ${tot}`;
+  document.getElementById('t-rf').textContent = `🚩 ${rf} red flag${rf!==1?'s':''}`;
+  document.getElementById('t-img').textContent = `📷 ${img} image${img!==1?'s':''} needed`;
+  document.getElementById('t-ok').textContent = `✓ ${ok} compliant`;
+}
+
+function toggleSec(id) {
+  const bd = document.getElementById('bd-'+id);
+  const chev = document.getElementById('chev-'+id);
+  const hidden = bd.style.display === 'none';
+  bd.style.display = hidden ? '' : 'none';
+  chev.classList.toggle('open', hidden);
+}
+
+function resetAll() {
+  Object.keys(ST.a).forEach(k => delete ST.a[k]);
+  Object.keys(ST.t).forEach(k => delete ST.t[k]);
+  Object.keys(ST.n).forEach(k => delete ST.n[k]);
+  renderChecklist();
+}
+
+// ─────────────────────────────────────────────
+//  SHARE
+// ─────────────────────────────────────────────
+function refreshShareStats() {
+  const store = document.getElementById('f-store').value || '(not set)';
+  const date  = document.getElementById('f-date').value || '—';
+  const vm    = document.getElementById('f-vm').value || '—';
+  const { tot, done, rf, ok } = totals();
+  const pct = tot > 0 ? Math.round((done/tot)*100) : 0;
+  const col = pct === 100 ? 'var(--g)' : pct >= 50 ? 'var(--am)' : 'var(--r)';
+  document.getElementById('share-stats').innerHTML = `
+    <div class="row"><span>Store</span><span class="row-val">${store}</span></div>
+    <div class="row"><span>Visit date</span><span class="row-val">${date}</span></div>
+    <div class="row"><span>Zonal VM</span><span class="row-val">${vm}</span></div>
+    <div class="row"><span>Completion</span><span class="row-val" style="color:${col}">${done} / ${tot} (${pct}%)</span></div>
+    <div class="row"><span>Red flags raised</span><span class="row-val" style="color:${rf>0?'var(--r)':'var(--g)'}">${rf}</span></div>
+    <div class="row"><span>Compliant items</span><span class="row-val" style="color:var(--g)">${ok}</span></div>`;
+}
+
+function genCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length:8}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+}
+
+async function saveAudit() {
+  const code = genCode();
+  const meta = {
+    store: document.getElementById('f-store').value,
+    date:  document.getElementById('f-date').value,
+    vm:    document.getElementById('f-vm').value,
+    mgr:   document.getElementById('f-mgr').value,
+    grade: document.getElementById('f-grade').value,
+    vtype: document.getElementById('f-vtype').value,
+  };
+  const payload = JSON.stringify({ meta, a: ST.a, t: ST.t, n: ST.n });
+  try {
+    await window.storage.set('fhc:' + code, payload, true);
+  } catch(e) {}
+  document.getElementById('share-code').textContent = code;
+  document.getElementById('code-area').style.display = 'block';
+}
+
+async function loadAudit() {
+  const code = document.getElementById('load-inp').value.trim().toUpperCase();
+  const msg  = document.getElementById('load-msg');
+  if (code.length < 4) { msg.innerHTML = `<div class="info-msg info-r">Please enter a valid 8-character share code.</div>`; return; }
+  msg.innerHTML = `<div class="info-msg info-b">Loading…</div>`;
+  try {
+    const res = await window.storage.get('fhc:' + code, true);
+    if (!res) { msg.innerHTML = `<div class="info-msg info-r">No audit found for that code. Please check and try again.</div>`; return; }
+    const data = JSON.parse(res.value);
+    Object.assign(ST.a, data.a||{}); Object.assign(ST.t, data.t||{}); Object.assign(ST.n, data.n||{});
+    const m = data.meta || {};
+    ['store','date','vm','mgr','grade','vtype'].forEach(k => {
+      const el = document.getElementById('f-'+k);
+      if (el && m[k]) el.value = m[k];
+    });
+    renderChecklist();
+    msg.innerHTML = `<div class="info-msg info-g">✓ Audit loaded. Switch to Checklist to view and continue.</div>`;
+  } catch(e) {
+    msg.innerHTML = `<div class="info-msg info-r">Could not load audit. Please try again.</div>`;
+  }
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(document.getElementById('share-code').textContent).catch(()=>{});
+  showToast('code-toast');
+}
+
+function copyEmailDraft() {
+  const store = document.getElementById('f-store').value || '(Store)';
+  const date  = document.getElementById('f-date').value || '—';
+  const vm    = document.getElementById('f-vm').value || '—';
+  const to    = document.getElementById('e-to').value;
+  const cc    = document.getElementById('e-cc').value;
+  const note  = document.getElementById('e-note').value;
+  const draft = `To: ${to}\nCC: ${cc}\n\nSubject: FHC Section Audit Report — ${store} | ${date}\n\nHi,\n\nPlease find below the FHC (Full Home Customization) section audit report for ${store}, conducted on ${date} by Zonal VM ${vm}.\n\nKindly review all flagged items and ensure corrective action is taken at the earliest.\n\nNote: ${note}\n\nRegards,\n${vm}`;
+  navigator.clipboard.writeText(draft).catch(()=>{});
+  showToast('email-toast');
+}
+
+function showToast(id) {
+  const t = document.getElementById(id);
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ─────────────────────────────────────────────
+//  AI REPORT
+// ─────────────────────────────────────────────
+function buildPayload() {
+  const meta = {
+    store: document.getElementById('f-store').value || 'Unknown Store',
+    date:  document.getElementById('f-date').value || '—',
+    vm:    document.getElementById('f-vm').value || '—',
+    mgr:   document.getElementById('f-mgr').value || '—',
+    grade: document.getElementById('f-grade').value || '—',
+    vtype: document.getElementById('f-vtype').value || 'Regular visit',
+  };
+  let tot=0, done=0, yes=0, no=0;
+  const findings = [], redFlags = [];
+  SECS.forEach(sec => {
+    const items = [];
+    sec.items.forEach(it => {
+      if (it[2] === 3) return;
+      tot++;
+      const a = ST.a[it[0]];
+      if (a !== undefined && a !== '') done++;
+      if (a === 'y') { yes++; items.push({ q: it[1], ans: 'Yes' }); }
+      else if (a === 'n') { no++; items.push({ q: it[1], ans: 'No', rf: it[3] }); if (it[3]) redFlags.push(`${sec.title}: ${it[1]}`); }
+      else if (a === 'na') items.push({ q: it[1], ans: 'N/A' });
+    });
+    if (items.length) findings.push({ section: sec.title, type: sec.badge === 'm' ? 'Mandatory' : 'Recommended', items, note: ST.n[sec.id] || '' });
+  });
+  return { meta, tot, done, yes, no, pct: tot>0?Math.round((done/tot)*100):0, findings, redFlags };
+}
+
+async function genReport() {
+  const p = buildPayload();
+  document.getElementById('report-out').innerHTML = `<div class="spinner-wrap"><div class="spin"></div>Generating audit report…</div>`;
+  document.getElementById('copy-rep-btn').style.display = 'none';
+
+  const prompt = `You are generating a professional store audit report for a Durian furniture store's FHC (Full Home Customization) section covering modular kitchens and wardrobes.
+
+VISIT: Store: ${p.meta.store} | Date: ${p.meta.date} | VM: ${p.meta.vm} | FHC Manager: ${p.meta.mgr} | Grade: ${p.meta.grade} | Type: ${p.meta.vtype}
+COMPLETION: ${p.done}/${p.tot} (${p.pct}%) | Yes: ${p.yes} | No: ${p.no}
+FINDINGS: ${JSON.stringify(p.findings)}
+RED FLAGS: ${p.redFlags.join(' | ') || 'None'}
+
+Return ONLY valid JSON, no markdown fences:
+{"executiveSummary":"3-4 sentence summary of overall visit and compliance","overallScore":0,"scoreLabel":"Poor/Below Standard/Adequate/Good/Excellent","mandatoryNote":"1-2 sentences on the 4 mandatory parameters","sectionFindings":[{"section":"name","status":"Pass/Fail/Partial","point":"one concise sentence"}],"redFlags":["concise escalation item"],"recommendations":["rec 1","rec 2","rec 3"],"nextSteps":["step with owner","step with owner"],"followUp":"suggested timeline"}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1200,
+        messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    const txt = data.content?.filter(c => c.type === 'text').map(c => c.text).join('');
+    const rpt = JSON.parse(txt.replace(/```json|```/g,'').trim());
+    renderReport(rpt, p);
+    _reportTxt = flattenReport(rpt, p);
+    document.getElementById('copy-rep-btn').style.display = '';
+  } catch(e) {
+    document.getElementById('report-out').innerHTML = `<div class="err-card">Could not generate the report. Please ensure the checklist has answers filled in and try again.</div>`;
+  }
+}
+
+function renderReport(r, p) {
+  const sc = r.overallScore;
+  const col = sc >= 80 ? 'var(--g)' : sc >= 55 ? 'var(--am)' : 'var(--r)';
+  const secRows = (r.sectionFindings||[]).map(s => {
+    const st = s.status === 'Pass' ? 's-pass' : s.status === 'Fail' ? 's-fail' : 's-part';
+    return `<div class="rpt-sec-row"><span>${s.section} — ${s.point}</span><span class="rpt-sec-status ${st}">${s.status}</span></div>`;
+  }).join('');
+  const rfRows = (r.redFlags||[]).length
+    ? (r.redFlags||[]).map(f => `<div class="rpt-flag"><span>🚩</span><span>${f}</span></div>`).join('')
+    : `<div style="font-size:13px;color:var(--g)">No red flags raised.</div>`;
+  const recs = (r.recommendations||[]).map(rc => `<div class="rpt-li">${rc}</div>`).join('');
+  const steps = (r.nextSteps||[]).map(s => `<div class="rpt-li">${s}</div>`).join('');
+
+  document.getElementById('report-out').innerHTML = `
+    <div class="rpt-score">
+      <div><div class="rpt-score-num" style="color:${col}">${sc}</div><div class="rpt-score-lbl" style="color:${col}">${r.scoreLabel}</div></div>
+      <div style="border-left:1px solid var(--bd);padding-left:14px;flex:1">
+        <div style="font-size:13px;font-weight:600;margin-bottom:2px">${p.meta.store} — FHC Audit</div>
+        <div style="font-size:12px;color:var(--ink3)">${p.meta.date} · ${p.meta.vm} · ${p.meta.vtype}</div>
+        <div style="font-size:12px;color:var(--ink3)">${p.done}/${p.tot} answered · ${p.yes} compliant · ${p.redFlags.length} red flag${p.redFlags.length!==1?'s':''}</div>
+      </div>
+    </div>
+    <div class="rpt-section"><h4>Executive summary</h4><p>${r.executiveSummary}</p></div>
+    <div class="rpt-section"><h4>Mandatory parameters</h4><p>${r.mandatoryNote}</p></div>
+    <div class="rpt-section"><h4>Section findings</h4>${secRows}</div>
+    <div class="rpt-section"><h4>Red flags — immediate action required</h4>${rfRows}</div>
+    <div class="rpt-section"><h4>Recommendations</h4>${recs}</div>
+    <div class="rpt-section"><h4>Next steps</h4>${steps}</div>
+    <div style="font-size:11px;color:var(--ink3);padding-top:8px;border-top:1px solid var(--bd)">Suggested follow-up: ${r.followUp}</div>`;
+}
+
+function flattenReport(r, p) {
+  return [
+    `FHC SECTION AUDIT REPORT`,
+    `${'─'.repeat(40)}`,
+    `Store: ${p.meta.store}  |  Date: ${p.meta.date}`,
+    `Zonal VM: ${p.meta.vm}  |  FHC Manager: ${p.meta.mgr}`,
+    `Grade: ${p.meta.grade}  |  Visit type: ${p.meta.vtype}`,
+    `Overall score: ${r.overallScore}/100 — ${r.scoreLabel}`,
+    ``,
+    `EXECUTIVE SUMMARY`, r.executiveSummary, ``,
+    `MANDATORY PARAMETERS`, r.mandatoryNote, ``,
+    `SECTION FINDINGS`,
+    ...(r.sectionFindings||[]).map(s => `• ${s.section}: ${s.status} — ${s.point}`), ``,
+    `RED FLAGS`,
+    ...(r.redFlags||[]).length ? (r.redFlags||[]).map(f=>`🚩 ${f}`) : ['None'], ``,
+    `RECOMMENDATIONS`,
+    ...(r.recommendations||[]).map((rc,i)=>`${i+1}. ${rc}`), ``,
+    `NEXT STEPS`,
+    ...(r.nextSteps||[]).map((s,i)=>`${i+1}. ${s}`), ``,
+    `Follow-up: ${r.followUp}`,
+  ].join('\n');
+}
+
+function copyReport() {
+  navigator.clipboard.writeText(_reportTxt).catch(()=>{});
+  showToast('rep-toast');
+}
+
+// ─────────────────────────────────────────────
+//  SLIDES
+// ─────────────────────────────────────────────
+async function genSlides() {
+  const p = buildPayload();
+  document.getElementById('slides-out').innerHTML = `<div class="spinner-wrap"><div class="spin"></div>Generating presentation…</div>`;
+  document.getElementById('copy-sl-btn').style.display = 'none';
+
+  const prompt = `Create a 5-slide executive presentation for a Durian FHC (modular kitchens & wardrobes) store audit.
+
+Store: ${p.meta.store} | Date: ${p.meta.date} | VM: ${p.meta.vm} | Score: ${p.pct}% | Compliant: ${p.yes}/${p.tot} | Red flags: ${p.redFlags.length}
+Red flags: ${p.redFlags.join('; ')||'None'}
+Non-compliant sections: ${p.findings.filter(f=>f.items.some(i=>i.ans==='No')).map(f=>f.section).join(', ')||'None'}
+
+Return ONLY a JSON array, no markdown:
+[
+  {"slide":1,"style":"sl-1","title":"FHC Audit Overview","subtitle":"${p.meta.store} · ${p.meta.date}","stat":"${p.pct}%","statLabel":"checklist completion","bullets":["VM: ${p.meta.vm}","Visit: ${p.meta.vtype}","Compliant: ${p.yes} items","Red flags: ${p.redFlags.length}"]},
+  {"slide":2,"style":"sl-2","title":"Key Observations","subtitle":"What was found on the floor","bullets":["observation 1","observation 2","observation 3","observation 4","observation 5"]},
+  {"slide":3,"style":"sl-3","title":"Red Flags","subtitle":"Requires immediate action","bullets":["action 1","action 2","action 3"]},
+  {"slide":4,"style":"sl-4","title":"Recommendations","subtitle":"For store team implementation","bullets":["rec 1","rec 2","rec 3","rec 4"]},
+  {"slide":5,"style":"sl-5","title":"Next Steps","subtitle":"Owner & timeline","bullets":["step 1","step 2","step 3"]}
+]
+Fill with real insights from the audit data. Max 12 words per bullet.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 900,
+        messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    const txt = data.content?.filter(c => c.type === 'text').map(c => c.text).join('');
+    _slideData = JSON.parse(txt.replace(/```json|```/g,'').trim());
+    renderSlides(_slideData);
+    document.getElementById('copy-sl-btn').style.display = '';
+  } catch(e) {
+    document.getElementById('slides-out').innerHTML = `<div class="err-card">Could not generate slides. Fill in more checklist answers and try again.</div>`;
+  }
+}
+
+function renderSlides(slides) {
+  document.getElementById('slides-out').innerHTML = `<div class="slides-stack">` + slides.map(s => {
+    const hasStat = s.stat ? `<div class="slide-big">${s.stat}</div><div class="slide-big-lbl">${s.statLabel||''}</div>` : '';
+    const bullets = (s.bullets||[]).map(b => `<li>${b}</li>`).join('');
+    return `<div class="slide ${s.style}">
+      <div class="slide-num">Slide ${s.slide} of ${slides.length}</div>
+      <div class="slide-t">${s.title}</div>
+      <div class="slide-st">${s.subtitle}</div>
+      ${hasStat}
+      <ul class="slide-ul">${bullets}</ul>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+function copySlides() {
+  const txt = _slideData.map(s =>
+    `SLIDE ${s.slide}: ${s.title}\n${s.subtitle}\n${s.stat?s.stat+' '+s.statLabel+'\n':''}\n${(s.bullets||[]).map(b=>`• ${b}`).join('\n')}`
+  ).join('\n\n' + '─'.repeat(30) + '\n\n');
+  navigator.clipboard.writeText(txt).catch(()=>{});
+  showToast('sl-toast');
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+document.getElementById('f-date').valueAsDate = new Date();
+renderChecklist();
+</script>
+</body>
+</html>
