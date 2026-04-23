@@ -321,12 +321,12 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
     <div class="stat-rows" id="share-stats"></div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Share with team — email attachment</div>
-    <p style="font-size:12px;color:var(--ink3);margin-bottom:14px;line-height:1.6">Download the audit report as a formatted HTML file. Anyone on the team can open it in their browser — no app or login needed. Attach it to your email.</p>
-    <div class="btn-row" style="justify-content:flex-start;margin:0;gap:8px">
-      <button class="btn btn-p" onclick="downloadHTMLReport()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+  <div class="card" style="border:2px solid var(--gm);background:var(--gp)">
+    <div class="card-title" style="color:var(--g)">📤 Share with team — email attachment</div>
+    <p style="font-size:12px;color:var(--ink2);margin-bottom:14px;line-height:1.6">Downloads a formatted <strong>HTML report file</strong> you can email to the store manager, Nishita, and Nilay. Anyone opens it by double-clicking — no app or login needed.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-p" onclick="downloadHTMLReport()" style="font-size:14px;padding:10px 22px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Download report (.html)
       </button>
       <button class="btn" onclick="printReport()">
@@ -337,17 +337,17 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
     <div id="html-msg" style="margin-top:10px"></div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Save for app — backup &amp; reload</div>
-    <p style="font-size:12px;color:var(--ink3);margin-bottom:14px;line-height:1.6">Downloads a <code style="font-size:11px;background:var(--sur2);padding:1px 5px;border-radius:4px">.json</code> file that can be re-uploaded into this app to reload all answers, notes, and photos on another device.</p>
-    <div class="btn-row" style="justify-content:flex-start;margin:0">
-      <button class="btn" onclick="saveAudit()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Download audit backup (.json)
+  <div class="card" style="opacity:.85">
+    <div class="card-title">🔁 Backup for app use only</div>
+    <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.6">Saves a <code style="font-size:11px;background:var(--sur3);padding:1px 5px;border-radius:4px">.json</code> backup — only useful for reloading the audit into this app on another device. <strong>Not for emailing.</strong></p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="saveAudit()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download backup (.json)
       </button>
     </div>
-    <div id="code-area" style="display:none;margin-top:10px">
-      <div class="info-msg info-g">✓ Backup downloaded. Use "Load audit" below to restore on another device.</div>
+    <div id="code-area" style="display:none;margin-top:8px">
+      <div class="info-msg info-b" style="font-size:11px">✓ Backup downloaded. Use "Load audit" below to restore it on another device.</div>
     </div>
   </div>
 
@@ -1104,7 +1104,6 @@ function copySlides() {
 function buildReportHTML() {
   const p = buildPayload();
   const meta = getMeta();
-  if (p.done === 0) return null;
 
   const score = p.pct;
   const scoreLabel = score>=85?'Excellent':score>=70?'Good':score>=55?'Adequate':score>=40?'Below Standard':'Poor';
@@ -1253,23 +1252,24 @@ ${sectionNotes ? `<h2>Section notes</h2><div style="background:#F7F7F5;border-ra
 }
 
 function downloadHTMLReport() {
-  const html = buildReportHTML();
   const msg  = document.getElementById('html-msg');
-  if (!html) { msg.innerHTML = `<div class="info-msg info-r">Please fill in the checklist before downloading the report.</div>`; return; }
-  const meta  = getMeta();
-  const store = (meta.store||'store').replace(/\s+/g,'-');
-  const date  = meta.date || new Date().toISOString().slice(0,10);
-  const blob  = new Blob([html], { type: 'text/html' });
-  const url   = URL.createObjectURL(blob);
-  const a     = document.createElement('a');
-  a.href = url; a.download = `FHC-Audit-${store}-${date}.html`; a.click();
-  URL.revokeObjectURL(url);
-  msg.innerHTML = `<div class="info-msg info-g">✓ Report downloaded as <strong>.html</strong> file. Email it as an attachment — anyone can open it in their browser.</div>`;
+  msg.innerHTML = `<div class="info-msg info-b">Building report…</div>`;
+  setTimeout(() => {
+    const html  = buildReportHTML();
+    const meta  = getMeta();
+    const store = (meta.store||'store').replace(/\s+/g,'-');
+    const date  = meta.date || new Date().toISOString().slice(0,10);
+    const blob  = new Blob([html], { type: 'text/html' });
+    const url   = URL.createObjectURL(blob);
+    const a     = document.createElement('a');
+    a.href = url; a.download = `FHC-Audit-Report-${store}-${date}.html`; a.click();
+    URL.revokeObjectURL(url);
+    msg.innerHTML = `<div class="info-msg info-g">✓ Report downloaded — <strong>FHC-Audit-Report-${store}-${date}.html</strong>. Open it in any browser and email as attachment.</div>`;
+  }, 50);
 }
 
 function printReport() {
   const html = buildReportHTML();
-  if (!html) { alert('Please fill in the checklist before printing.'); return; }
   const win = window.open('', '_blank');
   win.document.write(html);
   win.document.close();
