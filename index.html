@@ -223,11 +223,26 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
 .rpt-photo-item img{width:100px;height:80px;object-fit:cover;display:block;cursor:pointer}
 .rpt-photo-label{font-size:10px;color:var(--ink3);padding:3px 5px;background:var(--sur2);max-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
+@media print {
+  .topbar,.tabs,.prog-wrap,.btn-row,.sec-hd .chev,.photo-btn,.photo-del,.modal-bg,
+  #p-share,#p-report .card:last-child,.sec-notes{display:none!important}
+  body{background:#fff;padding:0}
+  .shell{max-width:100%;padding:0}
+  .panel{display:block!important}
+  #p-checklist{display:none!important}
+  .sec{border:1px solid #ddd;break-inside:avoid;margin-bottom:6px;box-shadow:none}
+  .sec-hd{padding:.5rem .75rem}
+  .sec-body{display:block!important}
+  .item{padding:.4rem .75rem}
+  .card{box-shadow:none;border:1px solid #ddd}
+  .photo-thumb img{width:80px;height:64px}
+}
 @media(max-width:600px){
   .meta-grid{grid-template-columns:1fr}
   .tabs{overflow-x:auto}
   .brand-sub{display:none}
 }
+
 </style>
 </head>
 <body>
@@ -307,16 +322,32 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
   </div>
 
   <div class="card">
-    <div class="card-title">Save audit to file</div>
-    <p style="font-size:12px;color:var(--ink3);margin-bottom:14px;line-height:1.6">Downloads a <code style="font-size:11px;background:var(--sur2);padding:1px 5px;border-radius:4px">.json</code> file of the entire audit — answers, notes, and photos. Share this file via WhatsApp, email, or Drive with your manager. They upload it below to view the full audit on their device.</p>
-    <div class="btn-row" style="justify-content:flex-start;margin:0">
-      <button class="btn btn-p" onclick="saveAudit()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Download audit file
+    <div class="card-title">Share with team — email attachment</div>
+    <p style="font-size:12px;color:var(--ink3);margin-bottom:14px;line-height:1.6">Download the audit report as a formatted HTML file. Anyone on the team can open it in their browser — no app or login needed. Attach it to your email.</p>
+    <div class="btn-row" style="justify-content:flex-start;margin:0;gap:8px">
+      <button class="btn btn-p" onclick="downloadHTMLReport()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Download report (.html)
+      </button>
+      <button class="btn" onclick="printReport()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print / Save as PDF
       </button>
     </div>
-    <div id="code-area" style="display:none;margin-top:12px">
-      <div class="info-msg info-g">✓ Audit file downloaded. Share it via WhatsApp, email, or Google Drive with your reporting manager.</div>
+    <div id="html-msg" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Save for app — backup &amp; reload</div>
+    <p style="font-size:12px;color:var(--ink3);margin-bottom:14px;line-height:1.6">Downloads a <code style="font-size:11px;background:var(--sur2);padding:1px 5px;border-radius:4px">.json</code> file that can be re-uploaded into this app to reload all answers, notes, and photos on another device.</p>
+    <div class="btn-row" style="justify-content:flex-start;margin:0">
+      <button class="btn" onclick="saveAudit()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download audit backup (.json)
+      </button>
+    </div>
+    <div id="code-area" style="display:none;margin-top:10px">
+      <div class="info-msg info-g">✓ Backup downloaded. Use "Load audit" below to restore on another device.</div>
     </div>
   </div>
 
@@ -1065,6 +1096,184 @@ function copySlides() {
   ).join('\n\n' + '─'.repeat(30) + '\n\n');
   navigator.clipboard.writeText(txt).catch(()=>{});
   showToast('sl-toast');
+}
+
+// ─────────────────────────────────────────────
+//  HTML REPORT DOWNLOAD & PRINT
+// ─────────────────────────────────────────────
+function buildReportHTML() {
+  const p = buildPayload();
+  const meta = getMeta();
+  if (p.done === 0) return null;
+
+  const score = p.pct;
+  const scoreLabel = score>=85?'Excellent':score>=70?'Good':score>=55?'Adequate':score>=40?'Below Standard':'Poor';
+  const scoreColor = score>=70?'#0F6E56':score>=50?'#854F0B':'#A32D2D';
+
+  const mandSecs  = SECS.filter(s => s.badge === 'm');
+  const mandItems = mandSecs.flatMap(s => s.items.filter(i => i[2] !== 3));
+  const mandYes   = mandItems.filter(i => ST.a[i[0]] === 'y').length;
+  const mandNo    = mandItems.filter(i => ST.a[i[0]] === 'n').length;
+  const mandPct   = mandItems.length ? Math.round((mandYes/mandItems.length)*100) : 0;
+  const mandFailQ = mandSecs.flatMap(s => s.items.filter(i => ST.a[i[0]] === 'n').map(i => i[1]));
+  const mandNote  = mandNo === 0
+    ? `All mandatory parameters compliant (${mandYes}/${mandItems.filter(i=>ST.a[i[0]]).length} checked, ${mandPct}%).`
+    : `${mandNo} mandatory item${mandNo>1?'s':''} non-compliant (${mandPct}% compliant). Issues: ${mandFailQ.slice(0,3).map(q=>q.substring(0,60)).join('; ')}.`;
+
+  const rfList = [];
+  SECS.forEach(sec => sec.items.forEach(it => {
+    if (it[3] && ST.a[it[0]] === 'n') rfList.push({ sec: sec.title, q: it[1] });
+  }));
+  const noItems = [];
+  SECS.forEach(sec => sec.items.forEach(it => { if (ST.a[it[0]] === 'n') noItems.push({ sec: sec.title, q: it[1] }); }));
+  const followupDays = rfList.length > 2 ? '7' : rfList.length > 0 ? '14' : '30';
+
+  // Section table rows
+  const secRows = SECS.map(sec => {
+    const ansItems = sec.items.filter(i => i[2] !== 3);
+    const answered = ansItems.filter(i => ST.a[i[0]]);
+    if (!answered.length) return '';
+    const yes = answered.filter(i => ST.a[i[0]] === 'y').length;
+    const no  = answered.filter(i => ST.a[i[0]] === 'n').length;
+    const status = no === 0 ? 'Pass' : yes === 0 ? 'Fail' : 'Partial';
+    const bg = status==='Pass'?'#E1F5EE':status==='Fail'?'#FCEBEB':'#FAEEDA';
+    const fc = status==='Pass'?'#0F6E56':status==='Fail'?'#A32D2D':'#854F0B';
+    const firstIssue = sec.items.find(i => ST.a[i[0]] === 'n');
+    const point = no === 0 ? `All ${yes} checked items compliant` : `${no} issue${no>1?'s':''} — ${firstIssue?firstIssue[1].substring(0,60)+'…':''}`;
+    return `<tr><td style="padding:7px 10px;border-bottom:1px solid #eee;font-size:13px">${sec.n}. ${sec.title}<br><span style="font-size:11px;color:#999">${sec.badge==='m'?'Mandatory':'Recommended'}</span></td>
+      <td style="padding:7px 10px;border-bottom:1px solid #eee;font-size:13px;color:#555">${point}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #eee;text-align:center"><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:4px;background:${bg};color:${fc}">${status}</span></td></tr>`;
+  }).join('');
+
+  // Detailed Q&A table
+  const qaRows = SECS.flatMap(sec => {
+    const secHeader = `<tr><td colspan="3" style="background:#1a1a2e;color:#fff;font-size:11px;font-weight:600;padding:7px 10px;letter-spacing:.05em;text-transform:uppercase">${sec.n}. ${sec.title} — ${sec.badge==='m'?'MANDATORY':'Recommended'}</td></tr>`;
+    const itemRows = sec.items.map(it => {
+      const ans = ST.a[it[0]];
+      const txt = ST.t[it[0]];
+      if (!ans && !txt) return '';
+      const isText = it[2] === 3;
+      const isNum  = it[2] === 2;
+      const displayAns = isText ? (txt||'—') : isNum ? (ans||'—') : (ans==='y'?'Yes':ans==='n'?'No':ans==='na'?'N/A':'—');
+      const ansBg = ans==='y'?'#E1F5EE':ans==='n'?'#FCEBEB':'#F7F7F5';
+      const ansColor = ans==='y'?'#0F6E56':ans==='n'?'#A32D2D':'#555';
+      const rfBadge = it[3] && ans==='n' ? `<span style="font-size:10px;background:#FCEBEB;color:#A32D2D;padding:1px 5px;border-radius:3px;margin-left:4px">🚩 Red flag</span>` : '';
+      const photos = ST.imgs[it[0]] || [];
+      const photoHtml = photos.length ? `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${photos.map(ph=>`<img src="${ph.src}" style="width:72px;height:58px;object-fit:cover;border-radius:4px;border:1px solid #ddd">`).join('')}</div>` : '';
+      return `<tr><td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#333;vertical-align:top;width:65%">${it[1]}${rfBadge}${photoHtml}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;font-size:12px;color:${ansColor};background:${ansBg};font-weight:600;text-align:center;vertical-align:top;white-space:nowrap">${displayAns}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;font-size:11px;color:#777;vertical-align:top">${sec.badge==='m'?'<span style="color:#0F6E56;font-weight:500">Mandatory</span>':'Recommended'}</td></tr>`;
+    }).filter(Boolean);
+    return itemRows.length ? [secHeader, ...itemRows] : [];
+  }).join('');
+
+  const rfHtml = rfList.length
+    ? rfList.map(f=>`<tr><td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;font-size:13px;color:#A32D2D">🚩 ${f.sec}</td><td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;font-size:13px">${f.q}</td></tr>`).join('')
+    : `<tr><td colspan="2" style="padding:10px;font-size:13px;color:#0F6E56">No red flags raised during this visit.</td></tr>`;
+
+  const sectionNotes = SECS.filter(s => ST.n[s.id]).map(s =>
+    `<div style="margin-bottom:10px"><strong style="font-size:12px;color:#555">${s.title}:</strong><p style="font-size:13px;color:#333;margin:3px 0 0">${ST.n[s.id]}</p></div>`
+  ).join('');
+
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<title>FHC Audit — ${meta.store||'Store'} — ${meta.date||''}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;color:#1a1a1a;background:#fff;padding:0}
+  .page{max-width:900px;margin:0 auto;padding:32px 28px}
+  h1{font-size:20px;font-weight:700;margin-bottom:4px}
+  h2{font-size:14px;font-weight:700;margin:24px 0 10px;padding-bottom:5px;border-bottom:2px solid #0F6E56;color:#0F6E56;text-transform:uppercase;letter-spacing:.05em}
+  table{width:100%;border-collapse:collapse;margin-bottom:4px}
+  @media print{body{padding:0}.page{padding:16px 14px}}
+</style></head><body><div class="page">
+
+<div style="background:#0F6E56;color:#fff;padding:20px 24px;border-radius:10px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+  <div>
+    <div style="font-size:11px;font-weight:600;opacity:.7;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Durian Stores — FHC Section Audit</div>
+    <h1 style="color:#fff;font-size:20px;margin-bottom:2px">${meta.store||'Store'}</h1>
+    <div style="font-size:13px;opacity:.85">${meta.date||'—'} &nbsp;·&nbsp; ${meta.vm||'—'} &nbsp;·&nbsp; ${meta.vtype||'Regular visit'}</div>
+    <div style="font-size:12px;opacity:.7;margin-top:3px">FHC Manager: ${meta.mgr||'—'} &nbsp;·&nbsp; Grade: ${meta.grade||'—'}</div>
+  </div>
+  <div style="text-align:center;background:rgba(255,255,255,.15);border-radius:8px;padding:12px 20px">
+    <div style="font-size:44px;font-weight:700;color:#fff;line-height:1">${score}%</div>
+    <div style="font-size:12px;opacity:.85;margin-top:2px">${scoreLabel}</div>
+    <div style="font-size:11px;opacity:.65;margin-top:2px">${p.done}/${p.tot} answered</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">
+  ${[
+    ['Compliant','#E1F5EE','#0F6E56',p.yes],
+    ['Non-compliant','#FCEBEB','#A32D2D',p.no],
+    ['Red flags','#FCEBEB','#A32D2D',rfList.length],
+    ['Photos','#EBF3FC','#185FA5',photoCount()],
+  ].map(([l,bg,c,v])=>`<div style="background:${bg};border-radius:8px;padding:12px;text-align:center">
+    <div style="font-size:28px;font-weight:700;color:${c}">${v}</div>
+    <div style="font-size:11px;color:${c};font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:2px">${l}</div>
+  </div>`).join('')}
+</div>
+
+<h2>Mandatory parameters</h2>
+<p style="font-size:13px;color:#333;line-height:1.6;margin-bottom:16px">${mandNote}</p>
+
+<h2>Section findings</h2>
+<table>
+  <thead><tr style="background:#f2f2f2">
+    <th style="padding:8px 10px;font-size:11px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Section</th>
+    <th style="padding:8px 10px;font-size:11px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Finding</th>
+    <th style="padding:8px 10px;font-size:11px;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Status</th>
+  </tr></thead>
+  <tbody>${secRows}</tbody>
+</table>
+
+<h2>Red flags — immediate action required</h2>
+<table><thead><tr style="background:#FCEBEB">
+  <th style="padding:8px 10px;font-size:11px;text-align:left;font-weight:600;color:#A32D2D;text-transform:uppercase">Section</th>
+  <th style="padding:8px 10px;font-size:11px;text-align:left;font-weight:600;color:#A32D2D;text-transform:uppercase">Issue</th>
+</tr></thead><tbody>${rfHtml}</tbody></table>
+
+${sectionNotes ? `<h2>Section notes</h2><div style="background:#F7F7F5;border-radius:8px;padding:14px 16px">${sectionNotes}</div>` : ''}
+
+<h2>Full checklist — question by question</h2>
+<table>
+  <thead><tr style="background:#f2f2f2">
+    <th style="padding:7px 10px;font-size:11px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Question</th>
+    <th style="padding:7px 10px;font-size:11px;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Answer</th>
+    <th style="padding:7px 10px;font-size:11px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Type</th>
+  </tr></thead>
+  <tbody>${qaRows}</tbody>
+</table>
+
+<div style="margin-top:24px;padding-top:14px;border-top:1px solid #eee;font-size:11px;color:#aaa;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px">
+  <span>FHC Section Audit · Durian Stores · ${meta.store||'—'}</span>
+  <span>Report generated: ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})} · Follow-up within ${followupDays} days</span>
+</div>
+
+</div></body></html>`;
+}
+
+function downloadHTMLReport() {
+  const html = buildReportHTML();
+  const msg  = document.getElementById('html-msg');
+  if (!html) { msg.innerHTML = `<div class="info-msg info-r">Please fill in the checklist before downloading the report.</div>`; return; }
+  const meta  = getMeta();
+  const store = (meta.store||'store').replace(/\s+/g,'-');
+  const date  = meta.date || new Date().toISOString().slice(0,10);
+  const blob  = new Blob([html], { type: 'text/html' });
+  const url   = URL.createObjectURL(blob);
+  const a     = document.createElement('a');
+  a.href = url; a.download = `FHC-Audit-${store}-${date}.html`; a.click();
+  URL.revokeObjectURL(url);
+  msg.innerHTML = `<div class="info-msg info-g">✓ Report downloaded as <strong>.html</strong> file. Email it as an attachment — anyone can open it in their browser.</div>`;
+}
+
+function printReport() {
+  const html = buildReportHTML();
+  if (!html) { alert('Please fill in the checklist before printing.'); return; }
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => { win.focus(); win.print(); };
 }
 
 // ─────────────────────────────────────────────
