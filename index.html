@@ -428,91 +428,91 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
 // ─────────────────────────────────────────────
 const SECS = [
   { id:'s1', n:1, title:'FHC section accessibility & signage', badge:'r', items:[
-    ['q1','Is the FHC section clearly signposted from the store entrance and main floor?',0,0,1],
-    ['q2','Is the FHC section easy to locate — no ambiguous paths or blocked sight lines?',0,0,0],
-    ['q3','Are there any obstructions blocking the route to the FHC section?',0,1,1],
+    ['q1','Is the FHC section clearly signposted from the store entrance and main floor?',0,0,1,null],
+    ['q2','Is the FHC section easy to locate — no ambiguous paths or blocked sight lines?',0,0,0,null],
+    ['q3','Are there any obstructions blocking the route to the FHC section?',0,1,1,'y'],
   ]},
   { id:'s2', n:2, title:'Cleanliness & hygiene', badge:'m', items:[
-    ['q4','Are floors in the FHC section swept and free from dust and debris?',0,0,1],
-    ['q5','Are all display unit surfaces, shelves, and countertops clean and wiped down?',0,0,1],
-    ['q6','Is there any dust visible on sample shutters, finish boards, or handles?',0,1,1],
-    ['q7','Are glass panels, mirror finishes, and lacquered surfaces streak-free?',0,0,1],
-    ['q8','Is the pantry / back area of the FHC section clean?',0,0,0],
-    ['q9','Are there any rodent or pest issues in the FHC section or back store?',0,1,1],
-    ['q10','Overall — does the FHC section look presentable and inviting to a walk-in customer?',0,0,0],
+    ['q4','Are floors in the FHC section swept and free from dust and debris?',0,0,1,null],
+    ['q5','Are all display unit surfaces, shelves, and countertops clean and wiped down?',0,0,1,null],
+    ['q6','Is there any dust visible on sample shutters, finish boards, or handles?',0,1,1,'y'],
+    ['q7','Are glass panels, mirror finishes, and lacquered surfaces streak-free?',0,0,1,null],
+    ['q8','Is the pantry / back area of the FHC section clean?',0,0,0,null],
+    ['q9','Are there any rodent or pest issues in the FHC section or back store?',0,1,1,'y'],
+    ['q10','Overall — does the FHC section look presentable and inviting to a walk-in customer?',0,0,0,null],
   ]},
   { id:'s3', n:3, title:'Sample display — correctness & completeness', badge:'m', items:[
-    ['q11','Are all shutter samples in the correct designated positions as per planogram?',0,0,1],
-    ['q12','Are all finish boards and material samples present and placed correctly?',0,0,1],
-    ['q13','Are all labels readable, correctly placed, and facing outward?',0,0,1],
-    ['q14','Are there any missing samples or finish boards?',0,1,0],
-    ['q15','If YES — list missing sample codes / names',3,0,0],
+    ['q11','Are all shutter samples in the correct designated positions as per planogram?',0,0,1,null],
+    ['q12','Are all finish boards and material samples present and placed correctly?',0,0,1,null],
+    ['q13','Are all labels readable, correctly placed, and facing outward?',0,0,1,null],
+    ['q14','Are there any missing samples or finish boards?',0,1,0,'y'],
+    ['q15','If YES — list missing sample codes / names',3,0,0,null],
   ]},
   { id:'s4', n:4, title:'Boxes, packing material & back-area tidiness', badge:'m', items:[
-    ['q16','Are there any open cartons or packing material visible on the floor or near display units?',0,1,1],
-    ['q17','Is the back-of-section / storage area tidy and well-organised?',0,0,1],
-    ['q18','If boxes must be kept, are they stacked neatly and completely out of customer view?',1,0,0],
-    ['q19','Are delivery or replenishment materials cleared within 24 hours of arrival?',0,0,0],
+    ['q16','Are there any open cartons or packing material visible on the floor or near display units?',0,1,1,'y'],
+    ['q17','Is the back-of-section / storage area tidy and well-organised?',0,0,1,null],
+    ['q18','If boxes must be kept, are they stacked neatly and completely out of customer view?',1,0,0,null],
+    ['q19','Are delivery or replenishment materials cleared within 24 hours of arrival?',0,0,0,null],
   ]},
   { id:'s5', n:5, title:'Damaged & defective items on display', badge:'m', items:[
-    ['q20','Are all kitchen unit frames and panels on display free from chips or cracks?',0,0,1],
-    ['q21','Are all wardrobe panels, shutters, and frames undamaged and structurally sound?',0,0,1],
-    ['q22','Are all handles, hinges, and hardware accessories properly fitted and undamaged?',0,0,1],
-    ['q23','Are countertop surfaces free from scratches, stains, or discolouration?',0,0,1],
-    ['q24','Are there any sun-faded or worn-out finish boards or panels on the floor?',0,1,1],
-    ['q25','Are there any damaged or defective items currently on display? (Flag immediately)',0,1,1],
-    ['q26','If YES — note SKU ID and brief description of damage',3,0,0],
+    ['q20','Are all kitchen unit frames and panels on display free from chips or cracks?',0,0,1,null],
+    ['q21','Are all wardrobe panels, shutters, and frames undamaged and structurally sound?',0,0,1,null],
+    ['q22','Are all handles, hinges, and hardware accessories properly fitted and undamaged?',0,0,1,null],
+    ['q23','Are countertop surfaces free from scratches, stains, or discolouration?',0,0,1,null],
+    ['q24','Are there any sun-faded or worn-out finish boards or panels on the floor?',0,1,1,'y'],
+    ['q25','Are there any damaged or defective items currently on display? (Flag immediately)',0,1,1,'y'],
+    ['q26','If YES — note SKU ID and brief description of damage',3,0,0,null],
   ]},
   { id:'s6', n:6, title:'Display arrangement & merchandising', badge:'r', items:[
-    ['q27','Are functional demo units (drawers, soft-close, lift-up shutters) working? — physically test them',0,1,1],
-    ['q28','Are there any non-Durian / non-FHC products placed in the FHC section?',0,1,1],
+    ['q27','Are functional demo units (drawers, soft-close, lift-up shutters) working? — physically test them',0,1,1,'n'],
+    ['q28','Are there any non-Durian / non-FHC products placed in the FHC section?',0,1,1,'y'],
   ]},
   { id:'s7', n:7, title:'Lighting', badge:'r', items:[
-    ['q29','Are all track lights and spotlights in the FHC section working — no blown or flickering bulbs?',0,0,1],
-    ['q30','Are lights the correct colour temperature to represent finishes accurately?',0,0,0],
-    ['q31','Is key lighting focused on display countertops, shutter finishes, and feature areas?',0,0,0],
-    ['q32','Are any display areas poorly lit or in shadow?',0,1,1],
-    ['q33','Are CCC panel lights (if present in FHC section) on and working?',1,0,0],
+    ['q29','Are all track lights and spotlights in the FHC section working — no blown or flickering bulbs?',0,0,1,null],
+    ['q30','Are lights the correct colour temperature to represent finishes accurately?',0,0,0,null],
+    ['q31','Is key lighting focused on display countertops, shutter finishes, and feature areas?',0,0,0,null],
+    ['q32','Are any display areas poorly lit or in shadow?',0,1,1,'y'],
+    ['q33','Are CCC panel lights (if present in FHC section) on and working?',1,0,0,null],
   ]},
   { id:'s8', n:8, title:'Price tags & communication', badge:'r', items:[
-    ['q34','Are price tags visible, legible, and placed correctly on all display units?',0,0,1],
-    ['q35','Are price tags in good physical condition — not torn, faded, or missing?',0,0,0],
-    ['q36','Are prices on tags accurate and up to date?',0,1,0],
+    ['q34','Are price tags visible, legible, and placed correctly on all display units?',0,0,1,null],
+    ['q35','Are price tags in good physical condition — not torn, faded, or missing?',0,0,0,null],
+    ['q36','Are prices on tags accurate and up to date?',0,1,0,'n'],
   ]},
   { id:'s9', n:9, title:'In-store branding & signage', badge:'r', items:[
-    ['q37','Is FHC section branding and signage clean, unbroken, and clearly visible?',0,0,1],
-    ['q38','Is there any faded, torn, or peeling communication material in the FHC section?',0,1,1],
-    ['q39','Are all metal stands, acrylic holders, or branding props in good condition?',0,0,1],
-    ['q40','Are brochures, catalogues, or lookbooks stocked and available for customers?',0,0,1],
-    ['q41','Is wall marketing (if any) relevant, current, and in good condition?',0,0,1],
+    ['q37','Is FHC section branding and signage clean, unbroken, and clearly visible?',0,0,1,null],
+    ['q38','Is there any faded, torn, or peeling communication material in the FHC section?',0,1,1,'y'],
+    ['q39','Are all metal stands, acrylic holders, or branding props in good condition?',0,0,1,null],
+    ['q40','Are brochures, catalogues, or lookbooks stocked and available for customers?',0,0,1,null],
+    ['q41','Is wall marketing (if any) relevant, current, and in good condition?',0,0,1,null],
   ]},
   { id:'s10', n:10, title:'VM props & styling', badge:'r', items:[
-    ['q42','Are decorative props (plants, vases, small accessories) in place and clean?',1,0,1],
-    ['q43','Are decorative / accent lights switched on during store hours?',1,0,1],
-    ['q44','Are all light bulbs in the FHC display units the correct colour?',0,0,0],
-    ['q45','Are there any damaged or broken VM props in the FHC section?',0,1,1],
-    ['q46','Is the kitchen display styled with accessories to simulate real use?',1,0,1],
+    ['q42','Are decorative props (plants, vases, small accessories) in place and clean?',1,0,1,null],
+    ['q43','Are decorative / accent lights switched on during store hours?',1,0,1,null],
+    ['q44','Are all light bulbs in the FHC display units the correct colour?',0,0,0,null],
+    ['q45','Are there any damaged or broken VM props in the FHC section?',0,1,1,'y'],
+    ['q46','Is the kitchen display styled with accessories to simulate real use?',1,0,1,null],
   ]},
   { id:'s11', n:11, title:'Staff readiness', badge:'r', items:[
-    ['q47','Is a dedicated FHC-trained staff member present during store hours?',0,1,0],
-    ['q48','How many FHC sales staff were present on the day of visit?',2,0,0],
-    ['q49','Was the FHC staff able to demonstrate products and explain finishes confidently?',0,0,0],
-    ['q50','Was staff able to explain the customisation process and timelines?',0,0,0],
-    ['q51','Were customers in the FHC section properly greeted and attended to?',1,0,0],
+    ['q47','Is a dedicated FHC-trained staff member present during store hours?',0,1,0,'n'],
+    ['q48','How many FHC sales staff were present on the day of visit?',2,0,0,null],
+    ['q49','Was the FHC staff able to demonstrate products and explain finishes confidently?',0,0,0,null],
+    ['q50','Was staff able to explain the customisation process and timelines?',0,0,0,null],
+    ['q51','Were customers in the FHC section properly greeted and attended to?',1,0,0,null],
   ]},
   { id:'s12', n:12, title:'Store ambiance & infrastructure', badge:'r', items:[
-    ['q52','Is the AC running continuously during showroom hours in the FHC section?',0,0,0],
-    ['q53','Is inverter backup available for FHC display lighting?',0,0,0],
-    ['q54','Is there any voltage fluctuation affecting lighting or display units?',0,1,0],
-    ['q55','Is there a dedicated customer consultation area in / adjacent to the FHC section?',1,0,1],
-    ['q56','If YES — is the discussion area clean, equipped (catalogue, samples), and maintained?',1,0,1],
-    ['q57','Are the walls and ceiling in the FHC section free from seepage, cracks, or staining?',0,1,1],
-    ['q58','Is the flooring in the FHC section clean and undamaged?',0,0,1],
+    ['q52','Is the AC running continuously during showroom hours in the FHC section?',0,0,0,null],
+    ['q53','Is inverter backup available for FHC display lighting?',0,0,0,null],
+    ['q54','Is there any voltage fluctuation affecting lighting or display units?',0,1,0,null],
+    ['q55','Is there a dedicated customer consultation area in / adjacent to the FHC section?',1,0,1,'n'],
+    ['q56','If YES — is the discussion area clean, equipped (catalogue, samples), and maintained?',1,0,1,null],
+    ['q57','Are the walls and ceiling in the FHC section free from seepage, cracks, or staining?',0,1,1,'n'],
+    ['q58','Is the flooring in the FHC section clean and undamaged?',0,0,1,null],
   ]},
   { id:'s13', n:13, title:'Back-store / godown (FHC)', badge:'r', items:[
-    ['q59','Is there a designated storage area for FHC inventory / spare samples?',0,0,0],
-    ['q60','Is the FHC godown / storage area well-maintained and accessible?',0,0,1],
-    ['q61','Is there any old, dumped, or damaged FHC stock in the storage area?',0,1,1],
+    ['q59','Is there a designated storage area for FHC inventory / spare samples?',0,0,0,null],
+    ['q60','Is the FHC godown / storage area well-maintained and accessible?',0,0,1,null],
+    ['q61','Is there any old, dumped, or damaged FHC stock in the storage area?',0,1,1,'y'],
   ]},
 ];
 
@@ -914,7 +914,8 @@ function genReport() {
   // Red flags
   const rfList = [];
   SECS.forEach(sec => sec.items.forEach(it => {
-    if (it[3] && ST.a[it[0]] === 'n') rfList.push({ secTitle: sec.title, q: it[1] });
+    const badAns = it[5];
+    if (badAns && ST.a[it[0]] === badAns) rfList.push({ secTitle: sec.title, q: it[1] });
   }));
 
   // All non-compliant for recommendations
@@ -1107,145 +1108,122 @@ function buildReportHTML() {
 
   const score = p.pct;
   const scoreLabel = score>=85?'Excellent':score>=70?'Good':score>=55?'Adequate':score>=40?'Below Standard':'Poor';
-  const scoreColor = score>=70?'#0F6E56':score>=50?'#854F0B':'#A32D2D';
 
-  const mandSecs  = SECS.filter(s => s.badge === 'm');
-  const mandItems = mandSecs.flatMap(s => s.items.filter(i => i[2] !== 3));
-  const mandYes   = mandItems.filter(i => ST.a[i[0]] === 'y').length;
-  const mandNo    = mandItems.filter(i => ST.a[i[0]] === 'n').length;
-  const mandPct   = mandItems.length ? Math.round((mandYes/mandItems.length)*100) : 0;
-  const mandFailQ = mandSecs.flatMap(s => s.items.filter(i => ST.a[i[0]] === 'n').map(i => i[1]));
-  const mandNote  = mandNo === 0
-    ? `All mandatory parameters compliant (${mandYes}/${mandItems.filter(i=>ST.a[i[0]]).length} checked, ${mandPct}%).`
-    : `${mandNo} mandatory item${mandNo>1?'s':''} non-compliant (${mandPct}% compliant). Issues: ${mandFailQ.slice(0,3).map(q=>q.substring(0,60)).join('; ')}.`;
-
+  // ── RED FLAGS: only flag when the specific bad answer is given ──
   const rfList = [];
   SECS.forEach(sec => sec.items.forEach(it => {
-    if (it[3] && ST.a[it[0]] === 'n') rfList.push({ sec: sec.title, q: it[1] });
+    const badAns = it[5]; // 6th element = the answer that triggers a red flag
+    if (badAns && ST.a[it[0]] === badAns) {
+      rfList.push({ sec: sec.title, q: it[1], ans: ST.a[it[0]] });
+    }
   }));
+
+  // ── ALL NON-COMPLIANT (for Q&A badge and follow-up) ──
   const noItems = [];
   SECS.forEach(sec => sec.items.forEach(it => { if (ST.a[it[0]] === 'n') noItems.push({ sec: sec.title, q: it[1] }); }));
   const followupDays = rfList.length > 2 ? '7' : rfList.length > 0 ? '14' : '30';
 
-  // Section table rows
-  const secRows = SECS.map(sec => {
-    const ansItems = sec.items.filter(i => i[2] !== 3);
-    const answered = ansItems.filter(i => ST.a[i[0]]);
-    if (!answered.length) return '';
-    const yes = answered.filter(i => ST.a[i[0]] === 'y').length;
-    const no  = answered.filter(i => ST.a[i[0]] === 'n').length;
-    const status = no === 0 ? 'Pass' : yes === 0 ? 'Fail' : 'Partial';
-    const bg = status==='Pass'?'#E1F5EE':status==='Fail'?'#FCEBEB':'#FAEEDA';
-    const fc = status==='Pass'?'#0F6E56':status==='Fail'?'#A32D2D':'#854F0B';
-    const firstIssue = sec.items.find(i => ST.a[i[0]] === 'n');
-    const point = no === 0 ? `All ${yes} checked items compliant` : `${no} issue${no>1?'s':''} — ${firstIssue?firstIssue[1].substring(0,60)+'…':''}`;
-    return `<tr><td style="padding:7px 10px;border-bottom:1px solid #eee;font-size:13px">${sec.n}. ${sec.title}<br><span style="font-size:11px;color:#999">${sec.badge==='m'?'Mandatory':'Recommended'}</span></td>
-      <td style="padding:7px 10px;border-bottom:1px solid #eee;font-size:13px;color:#555">${point}</td>
-      <td style="padding:7px 10px;border-bottom:1px solid #eee;text-align:center"><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:4px;background:${bg};color:${fc}">${status}</span></td></tr>`;
-  }).join('');
+  // ── RED FLAGS TABLE ──
+  const rfHtml = rfList.length
+    ? rfList.map((f,i) => `<tr style="background:${i%2===0?'#fff':'#fdf8f8'}">
+        <td style="padding:10px 12px;border-bottom:1px solid #f5e5e5;font-size:12px;font-weight:600;color:#A32D2D;vertical-align:top;white-space:nowrap;width:28%">${f.sec}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f5e5e5;font-size:13px;color:#1a1a1a;vertical-align:top">${f.q}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="2" style="padding:12px;font-size:13px;color:#0F6E56;text-align:center">✓ No red flags raised during this visit.</td></tr>`;
 
-  // Detailed Q&A table
+  // ── SECTION NOTES ──
+  const sectionNotes = SECS.filter(s => ST.n[s.id]).map(s =>
+    `<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #eee">
+      <div style="font-size:11px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">${s.title}</div>
+      <p style="font-size:13px;color:#333;line-height:1.6">${ST.n[s.id]}</p>
+    </div>`
+  ).join('');
+
+  // ── FULL Q&A ──
   const qaRows = SECS.flatMap(sec => {
-    const secHeader = `<tr><td colspan="3" style="background:#1a1a2e;color:#fff;font-size:11px;font-weight:600;padding:7px 10px;letter-spacing:.05em;text-transform:uppercase">${sec.n}. ${sec.title} — ${sec.badge==='m'?'MANDATORY':'Recommended'}</td></tr>`;
+    const secHeader = `<tr><td colspan="2" style="background:#1a2035;color:#fff;font-size:11px;font-weight:700;padding:8px 12px;letter-spacing:.06em;text-transform:uppercase">${sec.n}. ${sec.title}</td></tr>`;
     const itemRows = sec.items.map(it => {
       const ans = ST.a[it[0]];
       const txt = ST.t[it[0]];
       if (!ans && !txt) return '';
       const isText = it[2] === 3;
       const isNum  = it[2] === 2;
-      const displayAns = isText ? (txt||'—') : isNum ? (ans||'—') : (ans==='y'?'Yes':ans==='n'?'No':ans==='na'?'N/A':'—');
-      const ansBg = ans==='y'?'#E1F5EE':ans==='n'?'#FCEBEB':'#F7F7F5';
+      const displayAns = isText?(txt||'—'):isNum?(ans||'—'):(ans==='y'?'Yes':ans==='n'?'No':ans==='na'?'N/A':'—');
+      const isBad = it[5] && ans === it[5];
+      const ansBg    = ans==='y'?'#E1F5EE':ans==='n'?'#FCEBEB':'#F7F7F5';
       const ansColor = ans==='y'?'#0F6E56':ans==='n'?'#A32D2D':'#555';
-      const rfBadge = it[3] && ans==='n' ? `<span style="font-size:10px;background:#FCEBEB;color:#A32D2D;padding:1px 5px;border-radius:3px;margin-left:4px">🚩 Red flag</span>` : '';
-      const photos = ST.imgs[it[0]] || [];
-      const photoHtml = photos.length ? `<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${photos.map(ph=>`<img src="${ph.src}" style="width:72px;height:58px;object-fit:cover;border-radius:4px;border:1px solid #ddd">`).join('')}</div>` : '';
-      return `<tr><td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#333;vertical-align:top;width:65%">${it[1]}${rfBadge}${photoHtml}</td>
-        <td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;font-size:12px;color:${ansColor};background:${ansBg};font-weight:600;text-align:center;vertical-align:top;white-space:nowrap">${displayAns}</td>
-        <td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;font-size:11px;color:#777;vertical-align:top">${sec.badge==='m'?'<span style="color:#0F6E56;font-weight:500">Mandatory</span>':'Recommended'}</td></tr>`;
+      const rfBadge  = isBad ? `&nbsp;<span style="font-size:10px;background:#A32D2D;color:#fff;padding:1px 6px;border-radius:3px;font-weight:600">🚩 RED FLAG</span>` : '';
+      const photos   = ST.imgs[it[0]] || [];
+      const photoHtml = photos.length ? `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">${photos.map(ph=>`<img src="${ph.src}" style="width:180px;height:140px;object-fit:cover;border-radius:6px;border:1px solid #ddd">`).join('')}</div>` : '';
+      return `<tr>
+        <td style="padding:8px 12px;border-bottom:1px solid #f2f2f2;font-size:12px;color:#1a1a1a;vertical-align:top;width:75%">${it[1]}${rfBadge}${photoHtml}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #f2f2f2;font-size:12px;color:${ansColor};background:${ansBg};font-weight:700;text-align:center;vertical-align:top;white-space:nowrap">${displayAns}</td>
+      </tr>`;
     }).filter(Boolean);
     return itemRows.length ? [secHeader, ...itemRows] : [];
   }).join('');
-
-  const rfHtml = rfList.length
-    ? rfList.map(f=>`<tr><td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;font-size:13px;color:#A32D2D">🚩 ${f.sec}</td><td style="padding:7px 10px;border-bottom:1px solid #f0f0f0;font-size:13px">${f.q}</td></tr>`).join('')
-    : `<tr><td colspan="2" style="padding:10px;font-size:13px;color:#0F6E56">No red flags raised during this visit.</td></tr>`;
-
-  const sectionNotes = SECS.filter(s => ST.n[s.id]).map(s =>
-    `<div style="margin-bottom:10px"><strong style="font-size:12px;color:#555">${s.title}:</strong><p style="font-size:13px;color:#333;margin:3px 0 0">${ST.n[s.id]}</p></div>`
-  ).join('');
 
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <title>FHC Audit — ${meta.store||'Store'} — ${meta.date||''}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:Arial,sans-serif;color:#1a1a1a;background:#fff;padding:0}
-  .page{max-width:900px;margin:0 auto;padding:32px 28px}
-  h1{font-size:20px;font-weight:700;margin-bottom:4px}
-  h2{font-size:14px;font-weight:700;margin:24px 0 10px;padding-bottom:5px;border-bottom:2px solid #0F6E56;color:#0F6E56;text-transform:uppercase;letter-spacing:.05em}
-  table{width:100%;border-collapse:collapse;margin-bottom:4px}
-  @media print{body{padding:0}.page{padding:16px 14px}}
+  body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a1a;background:#fff}
+  .page{max-width:860px;margin:0 auto;padding:32px 28px}
+  h2{font-size:13px;font-weight:700;margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid #0F6E56;color:#0F6E56;text-transform:uppercase;letter-spacing:.06em}
+  table{width:100%;border-collapse:collapse}
+  @media print{.page{padding:16px 14px}h2{margin:18px 0 8px}}
 </style></head><body><div class="page">
 
-<div style="background:#0F6E56;color:#fff;padding:20px 24px;border-radius:10px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+<!-- HEADER -->
+<div style="background:#0F6E56;color:#fff;padding:22px 28px;border-radius:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
   <div>
-    <div style="font-size:11px;font-weight:600;opacity:.7;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Durian Stores — FHC Section Audit</div>
-    <h1 style="color:#fff;font-size:20px;margin-bottom:2px">${meta.store||'Store'}</h1>
-    <div style="font-size:13px;opacity:.85">${meta.date||'—'} &nbsp;·&nbsp; ${meta.vm||'—'} &nbsp;·&nbsp; ${meta.vtype||'Regular visit'}</div>
-    <div style="font-size:12px;opacity:.7;margin-top:3px">FHC Manager: ${meta.mgr||'—'} &nbsp;·&nbsp; Grade: ${meta.grade||'—'}</div>
+    <div style="font-size:10px;font-weight:700;opacity:.65;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Durian Stores — FHC Section Audit</div>
+    <div style="font-size:22px;font-weight:700;margin-bottom:4px">${meta.store||'Store'}</div>
+    <div style="font-size:13px;opacity:.85;margin-bottom:3px">${meta.date||'—'} &nbsp;·&nbsp; ${meta.vm||'—'} &nbsp;·&nbsp; ${meta.vtype||'Regular visit'}</div>
+    <div style="font-size:12px;opacity:.65">FHC Manager: ${meta.mgr||'—'} &nbsp;·&nbsp; Grade: ${meta.grade||'—'}</div>
   </div>
-  <div style="text-align:center;background:rgba(255,255,255,.15);border-radius:8px;padding:12px 20px">
-    <div style="font-size:44px;font-weight:700;color:#fff;line-height:1">${score}%</div>
-    <div style="font-size:12px;opacity:.85;margin-top:2px">${scoreLabel}</div>
-    <div style="font-size:11px;opacity:.65;margin-top:2px">${p.done}/${p.tot} answered</div>
+  <div style="text-align:center;min-width:110px">
+    <div style="font-size:52px;font-weight:700;line-height:1">${score}%</div>
+    <div style="font-size:13px;opacity:.85;margin-top:2px">${scoreLabel}</div>
+    <div style="font-size:11px;opacity:.6;margin-top:2px">${p.done}/${p.tot} answered</div>
   </div>
 </div>
 
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">
-  ${[
-    ['Compliant','#E1F5EE','#0F6E56',p.yes],
-    ['Non-compliant','#FCEBEB','#A32D2D',p.no],
-    ['Red flags','#FCEBEB','#A32D2D',rfList.length],
-    ['Photos','#EBF3FC','#185FA5',photoCount()],
-  ].map(([l,bg,c,v])=>`<div style="background:${bg};border-radius:8px;padding:12px;text-align:center">
-    <div style="font-size:28px;font-weight:700;color:${c}">${v}</div>
-    <div style="font-size:11px;color:${c};font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:2px">${l}</div>
-  </div>`).join('')}
+<!-- STAT TILES -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px">
+  ${[['Compliant','#E1F5EE','#0F6E56',p.yes],['Non-compliant','#FCEBEB','#A32D2D',p.no],['Red flags','#FCEBEB','#A32D2D',rfList.length],['Photos','#EBF3FC','#185FA5',photoCount()]]
+    .map(([l,bg,c,v])=>`<div style="background:${bg};border-radius:8px;padding:14px 10px;text-align:center">
+      <div style="font-size:32px;font-weight:700;color:${c};line-height:1">${v}</div>
+      <div style="font-size:10px;color:${c};font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:4px">${l}</div>
+    </div>`).join('')}
 </div>
 
-<h2>Mandatory parameters</h2>
-<p style="font-size:13px;color:#333;line-height:1.6;margin-bottom:16px">${mandNote}</p>
-
-<h2>Section findings</h2>
-<table>
-  <thead><tr style="background:#f2f2f2">
-    <th style="padding:8px 10px;font-size:11px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Section</th>
-    <th style="padding:8px 10px;font-size:11px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Finding</th>
-    <th style="padding:8px 10px;font-size:11px;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Status</th>
+<!-- RED FLAGS -->
+<h2>Red flags — immediate action required</h2>
+<table style="margin-bottom:8px">
+  <thead><tr style="background:#FCEBEB">
+    <th style="padding:9px 12px;font-size:11px;text-align:left;font-weight:700;color:#A32D2D;text-transform:uppercase;letter-spacing:.05em;width:28%">Section</th>
+    <th style="padding:9px 12px;font-size:11px;text-align:left;font-weight:700;color:#A32D2D;text-transform:uppercase;letter-spacing:.05em">Issue</th>
   </tr></thead>
-  <tbody>${secRows}</tbody>
+  <tbody>${rfHtml}</tbody>
 </table>
 
-<h2>Red flags — immediate action required</h2>
-<table><thead><tr style="background:#FCEBEB">
-  <th style="padding:8px 10px;font-size:11px;text-align:left;font-weight:600;color:#A32D2D;text-transform:uppercase">Section</th>
-  <th style="padding:8px 10px;font-size:11px;text-align:left;font-weight:600;color:#A32D2D;text-transform:uppercase">Issue</th>
-</tr></thead><tbody>${rfHtml}</tbody></table>
+${sectionNotes ? `<h2>Section notes</h2><div style="background:#F7F7F5;border-radius:8px;padding:16px 18px;margin-bottom:4px">${sectionNotes}</div>` : ''}
 
-${sectionNotes ? `<h2>Section notes</h2><div style="background:#F7F7F5;border-radius:8px;padding:14px 16px">${sectionNotes}</div>` : ''}
-
+<!-- FULL CHECKLIST -->
 <h2>Full checklist — question by question</h2>
 <table>
   <thead><tr style="background:#f2f2f2">
-    <th style="padding:7px 10px;font-size:11px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Question</th>
-    <th style="padding:7px 10px;font-size:11px;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Answer</th>
-    <th style="padding:7px 10px;font-size:11px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Type</th>
+    <th style="padding:8px 12px;font-size:11px;text-align:left;font-weight:700;text-transform:uppercase;letter-spacing:.04em">Question</th>
+    <th style="padding:8px 12px;font-size:11px;text-align:center;font-weight:700;text-transform:uppercase;letter-spacing:.04em;width:80px">Answer</th>
   </tr></thead>
   <tbody>${qaRows}</tbody>
 </table>
 
-<div style="margin-top:24px;padding-top:14px;border-top:1px solid #eee;font-size:11px;color:#aaa;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px">
+<!-- FOOTER -->
+<div style="margin-top:28px;padding-top:14px;border-top:1px solid #eee;font-size:11px;color:#bbb;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
   <span>FHC Section Audit · Durian Stores · ${meta.store||'—'}</span>
-  <span>Report generated: ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})} · Follow-up within ${followupDays} days</span>
+  <span>Generated: ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})} · Follow-up within ${followupDays} days</span>
 </div>
 
 </div></body></html>`;
