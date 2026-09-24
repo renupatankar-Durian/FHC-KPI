@@ -485,6 +485,7 @@ const SECS = [
     ['q39','Are all metal stands, acrylic holders, or branding props in good condition?',0,0,1,null],
     ['q40','Are brochures, catalogues, or lookbooks stocked and available for customers?',0,0,1,null],
     ['q41','Is wall marketing (if any) relevant, current, and in good condition?',0,0,1,null],
+    ['q65','Are product / collection tent cards displayed on all display SKUs?',0,0,0,'n'],
   ]},
   { id:'s10', n:10, title:'VM props & styling', badge:'r', items:[
     ['q42','Are decorative props (plants, vases, small accessories) in place and clean?',1,0,1,null],
@@ -513,6 +514,11 @@ const SECS = [
     ['q59','Is there a designated storage area for FHC inventory / spare samples?',0,0,0,null],
     ['q60','Is the FHC godown / storage area well-maintained and accessible?',0,0,1,null],
     ['q61','Is there any old, dumped, or damaged FHC stock in the storage area?',0,1,1,'y'],
+  ]},
+  { id:'s14', n:14, title:'Meeting rooms & loose furniture', badge:'r', items:[
+    ['q62','Are the meeting rooms maintained in good condition? (No clutter on the table top, chairs placed neatly)',0,0,0,'n'],
+    ['q63','Durian Furniture – Is the loose furniture in the store in good condition? (No cuts, scratches or visible damage)',0,0,1,'n'],
+    ['q64','If NO — mention the product name(s) with damage',3,0,0,null],
   ]},
 ];
 
@@ -631,7 +637,7 @@ function totals() {
     tot++;
     const a = ST.a[it[0]];
     if (a !== undefined && a !== '') done++;
-    if (a === 'n' && it[3]) rf++;
+    if (it[5] && a === it[5]) rf++;
     if (a === 'n' && it[4]) img++;
     if (a === 'y') ok++;
   }));
@@ -1125,11 +1131,16 @@ function buildReportHTML() {
 
   // ── RED FLAGS TABLE ──
   const rfHtml = rfList.length
-    ? rfList.map((f,i) => `<tr style="background:${i%2===0?'#fff':'#fdf8f8'}">
-        <td style="padding:10px 12px;border-bottom:1px solid #f5e5e5;font-size:12px;font-weight:600;color:#A32D2D;vertical-align:top;white-space:nowrap;width:28%">${f.sec}</td>
-        <td style="padding:10px 12px;border-bottom:1px solid #f5e5e5;font-size:13px;color:#1a1a1a;vertical-align:top">${f.q}</td>
-      </tr>`).join('')
-    : `<tr><td colspan="2" style="padding:12px;font-size:13px;color:#0F6E56;text-align:center">✓ No red flags raised during this visit.</td></tr>`;
+    ? rfList.map((f,i) => {
+        const ansLabel = f.ans==='y'?'Yes':f.ans==='n'?'No':'—';
+        return `<tr style="background:${i%2===0?'#fff':'#fdf8f8'}">
+          <td style="padding:10px 12px;border-bottom:1px solid #f5e5e5;font-size:11px;font-weight:700;color:#A32D2D;vertical-align:top;white-space:nowrap;width:5%;text-align:center">${i+1}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f5e5e5;font-size:12px;font-weight:600;color:#5a1a1a;vertical-align:top;width:25%">${f.sec}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f5e5e5;font-size:13px;color:#1a1a1a;vertical-align:top">${f.q}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #f5e5e5;font-size:13px;font-weight:700;color:#A32D2D;text-align:center;vertical-align:top;white-space:nowrap;width:8%">${ansLabel}</td>
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="4" style="padding:14px;font-size:13px;color:#0F6E56;text-align:center">✓ No red flags raised during this visit — section is compliant.</td></tr>`;
 
   // ── SECTION NOTES ──
   const sectionNotes = SECS.filter(s => ST.n[s.id]).map(s =>
@@ -1199,14 +1210,17 @@ function buildReportHTML() {
 </div>
 
 <!-- RED FLAGS -->
-<h2>Red flags — immediate action required</h2>
-<table style="margin-bottom:8px">
-  <thead><tr style="background:#FCEBEB">
-    <th style="padding:9px 12px;font-size:11px;text-align:left;font-weight:700;color:#A32D2D;text-transform:uppercase;letter-spacing:.05em;width:28%">Section</th>
-    <th style="padding:9px 12px;font-size:11px;text-align:left;font-weight:700;color:#A32D2D;text-transform:uppercase;letter-spacing:.05em">Issue</th>
+<h2>🚩 Red flag checklist — non-compliant items requiring immediate action</h2>
+<table style="margin-bottom:8px;border:1px solid #f5e5e5;border-radius:8px;overflow:hidden">
+  <thead><tr style="background:#A32D2D">
+    <th style="padding:9px 10px;font-size:11px;text-align:center;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;width:5%">#</th>
+    <th style="padding:9px 12px;font-size:11px;text-align:left;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;width:25%">Section</th>
+    <th style="padding:9px 12px;font-size:11px;text-align:left;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em">Non-compliant issue</th>
+    <th style="padding:9px 10px;font-size:11px;text-align:center;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;width:8%">Answer</th>
   </tr></thead>
   <tbody>${rfHtml}</tbody>
 </table>
+${rfList.length ? `<div style="font-size:11px;color:#A32D2D;margin-bottom:4px;padding:6px 10px;background:#FCEBEB;border-radius:6px">⚠️ ${rfList.length} red flag${rfList.length>1?'s':''} identified — corrective action required within ${followupDays} days.</div>` : ''}
 
 ${sectionNotes ? `<h2>Section notes</h2><div style="background:#F7F7F5;border-radius:8px;padding:16px 18px;margin-bottom:4px">${sectionNotes}</div>` : ''}
 
