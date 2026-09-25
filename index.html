@@ -596,11 +596,16 @@ function renderItem(it, isLast, secId) {
 
   const photoZone = img ? `
     <div class="photo-zone" id="pz-${id}">
-      <label class="photo-btn" onclick="triggerPhoto('${id}')">
+      <label class="photo-btn" onclick="triggerPhotoCamera('${id}')" title="Take photo with camera">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        Add photo
+        Camera
+      </label>
+      <label class="photo-btn" onclick="triggerPhotoGallery('${id}')" title="Choose from gallery" style="margin-left:4px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Gallery
       </label>
       <input type="file" accept="image/*" capture="environment" class="photo-inp" id="pi-${id}" onchange="handlePhoto('${id}',this)">
+      <input type="file" accept="image/*" class="photo-inp" id="pig-${id}" onchange="handlePhoto('${id}',this)" multiple>
       <div class="photo-grid" id="pg-${id}">${renderThumbs(id)}</div>
     </div>` : '';
 
@@ -677,6 +682,12 @@ function resetAll() {
 // ─────────────────────────────────────────────
 function triggerPhoto(id) {
   document.getElementById('pi-' + id).click();
+}
+function triggerPhotoCamera(id) {
+  document.getElementById('pi-' + id).click();
+}
+function triggerPhotoGallery(id) {
+  document.getElementById('pig-' + id).click();
 }
 
 function handlePhoto(id, input) {
@@ -871,8 +882,9 @@ function buildPayload() {
       tot++;
       const a = ST.a[it[0]];
       if (a !== undefined && a !== '') done++;
-      if (a === 'y') { yes++; items.push({ q: it[1], ans: 'Yes' }); }
-      else if (a === 'n') { no++; items.push({ q: it[1], ans: 'No', rf: it[3] }); if (it[3]) redFlags.push(`${sec.title}: ${it[1]}`); }
+      const isBadAns = it[5] && a === it[5];
+      if (isBadAns) { no++; items.push({ q: it[1], ans: a==='y'?'Yes':'No', rf: true }); redFlags.push(`${sec.title}: ${it[1]}`); }
+      else if (a !== undefined && a !== '' && a !== 'na') { yes++; items.push({ q: it[1], ans: a==='y'?'Yes':'No' }); }
       else if (a === 'na') items.push({ q: it[1], ans: 'N/A' });
     });
     if (items.length) findings.push({ section: sec.title, type: sec.badge === 'm' ? 'Mandatory' : 'Recommended', items, note: ST.n[sec.id] || '' });
@@ -1161,8 +1173,8 @@ function buildReportHTML() {
       const isNum  = it[2] === 2;
       const displayAns = isText?(txt||'—'):isNum?(ans||'—'):(ans==='y'?'Yes':ans==='n'?'No':ans==='na'?'N/A':'—');
       const isBad = it[5] && ans === it[5];
-      const ansBg    = ans==='y'?'#E1F5EE':ans==='n'?'#FCEBEB':'#F7F7F5';
-      const ansColor = ans==='y'?'#0F6E56':ans==='n'?'#A32D2D':'#555';
+      const ansBg    = isBad ? '#FCEBEB' : '#F7F7F5';
+      const ansColor = isBad ? '#A32D2D' : '#333';
       const rfBadge  = isBad ? `&nbsp;<span style="font-size:10px;background:#A32D2D;color:#fff;padding:1px 6px;border-radius:3px;font-weight:600">🚩 RED FLAG</span>` : '';
       const photos   = ST.imgs[it[0]] || [];
       const photoHtml = photos.length ? `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">${photos.map(ph=>`<img src="${ph.src}" style="width:180px;height:140px;object-fit:cover;border-radius:6px;border:1px solid #ddd">`).join('')}</div>` : '';
@@ -1202,7 +1214,7 @@ function buildReportHTML() {
 
 <!-- STAT TILES -->
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px">
-  ${[['Compliant','#E1F5EE','#0F6E56',p.yes],['Non-compliant','#FCEBEB','#A32D2D',p.no],['Red flags','#FCEBEB','#A32D2D',rfList.length],['Photos','#EBF3FC','#185FA5',photoCount()]]
+  ${[['Compliant','#E1F5EE','#0F6E56',p.yes],['Non-compliant','#FCEBEB','#A32D2D',p.no],['Red flags 🚩','#FCEBEB','#A32D2D',rfList.length],['Photos','#EBF3FC','#185FA5',photoCount()]]
     .map(([l,bg,c,v])=>`<div style="background:${bg};border-radius:8px;padding:14px 10px;text-align:center">
       <div style="font-size:32px;font-weight:700;color:${c};line-height:1">${v}</div>
       <div style="font-size:10px;color:${c};font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:4px">${l}</div>
