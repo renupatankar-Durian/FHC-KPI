@@ -1040,7 +1040,7 @@ function genSlides() {
 
   const score = p.pct;
   const rfList = [];
-  SECS.forEach(sec => sec.items.forEach(it => { if (it[3] && ST.a[it[0]] === 'n') rfList.push(`${sec.title}: ${it[1].substring(0,60)}…`); }));
+  SECS.forEach(sec => sec.items.forEach(it => { if (it[5] && ST.a[it[0]] === it[5]) rfList.push(`${sec.title}: ${it[1].substring(0,60)}…`); }));
   const noItems = [];
   SECS.forEach(sec => sec.items.forEach(it => { if (ST.a[it[0]] === 'n') noItems.push({ sec: sec.title, q: it[1] }); }));
   const okItems = [];
