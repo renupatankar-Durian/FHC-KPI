@@ -7,6 +7,31 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
+
+/* ── PASSWORD SCREEN ── */
+#pw-screen{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0F6E56 0%,#0a4f3d 100%);display:flex;align-items:center;justify-content:center;padding:1rem}
+#pw-box{background:#fff;border-radius:16px;padding:2.5rem 2rem;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center}
+#pw-logo{width:48px;height:48px;background:#0F6E56;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem}
+#pw-logo svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#pw-title{font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+#pw-sub{font-size:13px;color:#888;margin-bottom:1.5rem}
+#pw-input{width:100%;font-size:15px;font-family:'DM Sans',sans-serif;padding:11px 14px;border:1.5px solid #E8E6E3;border-radius:9px;background:#F7F7F5;color:#1a1a1a;outline:none;text-align:center;letter-spacing:.1em;margin-bottom:10px;transition:border .15s}
+#pw-input:focus{border-color:#0F6E56;background:#fff}
+#pw-btn{width:100%;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;padding:11px;background:#0F6E56;color:#fff;border:none;border-radius:9px;cursor:pointer;transition:background .15s}
+#pw-btn:hover{background:#0a5240}
+#pw-err{font-size:12px;color:#A32D2D;margin-top:8px;min-height:18px}
+#pw-hint{font-size:11px;color:#bbb;margin-top:14px}
+
+/* ── SUBMIT BANNER ── */
+#submit-banner{background:linear-gradient(135deg,#E1F5EE,#F0FAF6);border:1.5px solid rgba(15,110,86,.25);border-radius:12px;padding:16px 18px;margin-bottom:1rem;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#submit-banner-txt{flex:1;min-width:180px}
+#submit-banner-txt strong{font-size:13px;color:#0F6E56;display:block;margin-bottom:2px}
+#submit-banner-txt span{font-size:12px;color:#555;line-height:1.5}
+#submit-status{font-size:12px;margin-top:8px;padding:6px 10px;border-radius:6px;display:none}
+.ss-ok{background:#E1F5EE;color:#0F6E56}
+.ss-err{background:#FCEBEB;color:#A32D2D}
+.ss-wait{background:#EBF3FC;color:#185FA5}
+
 :root{
   --g:#0F6E56;--gm:#1D9E75;--gl:#E1F5EE;--gp:#F0FAF6;
   --r:#A32D2D;--rl:#FCEBEB;
@@ -246,6 +271,8 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
 </style>
 </head>
 <body>
+
+
 <div class="shell">
 
 <div class="topbar">
@@ -319,6 +346,19 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
   <div class="card">
     <div class="card-title">Current audit status</div>
     <div class="stat-rows" id="share-stats"></div>
+  </div>
+
+  <!-- SUBMIT TO ADMIN BANNER -->
+  <div id="submit-banner">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <div id="submit-banner-txt">
+      <strong>📊 Submit audit to admin dashboard</strong>
+      <span>Sends your completed audit data to the central tracker. Do this after downloading the report.</span>
+      <div id="submit-status"></div>
+    </div>
+    <button class="btn btn-p" onclick="submitToAdmin()" style="white-space:nowrap;flex-shrink:0">
+      Submit audit ↗
+    </button>
   </div>
 
   <div class="card" style="border:2px solid var(--gm);background:var(--gp)">
@@ -422,6 +462,73 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
 </div>
 
 <script>
+// ─────────────────────────────────────────────
+//  CONFIG — set these two values
+// ─────────────────────────────────────────────
+const APP_PASSWORD = 'Durian@FHC2026';          // shared access password
+const SHEET_URL    = 'https://script.google.com/macros/s/AKfycbzDaXiBXgWMR-44M_VO1jmveDCxUcovty3CWhCqJop_mVc65_odXg33IgtQNdwoEHxr/exec';
+
+// ─────────────────────────────────────────────
+//  PASSWORD GATE — disabled for now
+// ─────────────────────────────────────────────
+function checkPw() {} // placeholder — will be enabled later
+
+// ─────────────────────────────────────────────
+//  SUBMIT TO ADMIN (Google Sheets)
+// ─────────────────────────────────────────────
+function submitToAdmin() {
+  const status = document.getElementById('submit-status');
+  status.style.display = 'block';
+  status.className = 'ss-wait';
+  status.textContent = '⏳ Submitting…';
+
+  if (!SHEET_URL || SHEET_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    status.className = 'ss-err';
+    status.textContent = '⚠️ Admin URL not configured yet. Contact Zonal VM.';
+    return;
+  }
+
+  const meta = getMeta ? getMeta() : {};
+  const p = buildPayload();
+
+  // collect red flags
+  const rfList = [];
+  SECS.forEach(sec => sec.items.forEach(it => {
+    if (it[5] && ST.a[it[0]] === it[5]) rfList.push(`${sec.title}: ${it[1]}`);
+  }));
+
+  const payload = {
+    timestamp:    new Date().toISOString(),
+    store:        meta.store || document.getElementById('f-store')?.value || '',
+    date:         meta.date  || document.getElementById('f-date')?.value || '',
+    vm:           meta.vm    || document.getElementById('f-vm')?.value   || '',
+    manager:      meta.mgr   || document.getElementById('f-mgr')?.value  || '',
+    grade:        meta.grade || document.getElementById('f-grade')?.value|| '',
+    visit_type:   meta.vtype || document.getElementById('f-vtype')?.value|| '',
+    score:        p.pct,
+    compliant:    p.yes,
+    non_compliant:p.no,
+    red_flags:    rfList.length,
+    red_flag_list:rfList.join(' | '),
+    total_q:      p.tot,
+    answered:     p.done,
+    photos:       photoCount()
+  };
+
+  fetch(SHEET_URL, {
+    method: 'POST',
+    mode:   'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body:   JSON.stringify(payload)
+  }).then(() => {
+    status.className = 'ss-ok';
+    status.textContent = '✅ Submitted! Audit recorded in the central dashboard.';
+  }).catch(err => {
+    status.className = 'ss-err';
+    status.textContent = '❌ Submission failed. Check your connection and try again.';
+  });
+}
+
 // ─────────────────────────────────────────────
 //  DATA  —  61 questions from finalised Excel
 //  [id, question, type(0=yn,1=yna,2=num,3=txt), redFlag, imgReq]
