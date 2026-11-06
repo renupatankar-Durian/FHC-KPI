@@ -7,31 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-
-/* ── PASSWORD SCREEN ── */
-#pw-screen{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0F6E56 0%,#0a4f3d 100%);display:flex;align-items:center;justify-content:center;padding:1rem}
-#pw-box{background:#fff;border-radius:16px;padding:2.5rem 2rem;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center}
-#pw-logo{width:48px;height:48px;background:#0F6E56;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem}
-#pw-logo svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#pw-title{font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
-#pw-sub{font-size:13px;color:#888;margin-bottom:1.5rem}
-#pw-input{width:100%;font-size:15px;font-family:'DM Sans',sans-serif;padding:11px 14px;border:1.5px solid #E8E6E3;border-radius:9px;background:#F7F7F5;color:#1a1a1a;outline:none;text-align:center;letter-spacing:.1em;margin-bottom:10px;transition:border .15s}
-#pw-input:focus{border-color:#0F6E56;background:#fff}
-#pw-btn{width:100%;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;padding:11px;background:#0F6E56;color:#fff;border:none;border-radius:9px;cursor:pointer;transition:background .15s}
-#pw-btn:hover{background:#0a5240}
-#pw-err{font-size:12px;color:#A32D2D;margin-top:8px;min-height:18px}
-#pw-hint{font-size:11px;color:#bbb;margin-top:14px}
-
-/* ── SUBMIT BANNER ── */
-#submit-banner{background:linear-gradient(135deg,#E1F5EE,#F0FAF6);border:1.5px solid rgba(15,110,86,.25);border-radius:12px;padding:16px 18px;margin-bottom:1rem;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-#submit-banner-txt{flex:1;min-width:180px}
-#submit-banner-txt strong{font-size:13px;color:#0F6E56;display:block;margin-bottom:2px}
-#submit-banner-txt span{font-size:12px;color:#555;line-height:1.5}
-#submit-status{font-size:12px;margin-top:8px;padding:6px 10px;border-radius:6px;display:none}
-.ss-ok{background:#E1F5EE;color:#0F6E56}
-.ss-err{background:#FCEBEB;color:#A32D2D}
-.ss-wait{background:#EBF3FC;color:#185FA5}
-
 :root{
   --g:#0F6E56;--gm:#1D9E75;--gl:#E1F5EE;--gp:#F0FAF6;
   --r:#A32D2D;--rl:#FCEBEB;
@@ -271,8 +246,6 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
 </style>
 </head>
 <body>
-
-
 <div class="shell">
 
 <div class="topbar">
@@ -346,19 +319,6 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
   <div class="card">
     <div class="card-title">Current audit status</div>
     <div class="stat-rows" id="share-stats"></div>
-  </div>
-
-  <!-- SUBMIT TO ADMIN BANNER -->
-  <div id="submit-banner">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-    <div id="submit-banner-txt">
-      <strong>📊 Submit audit to admin dashboard</strong>
-      <span>Sends your completed audit data to the central tracker. Do this after downloading the report.</span>
-      <div id="submit-status"></div>
-    </div>
-    <button class="btn btn-p" onclick="submitToAdmin()" style="white-space:nowrap;flex-shrink:0">
-      Submit audit ↗
-    </button>
   </div>
 
   <div class="card" style="border:2px solid var(--gm);background:var(--gp)">
@@ -463,73 +423,6 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
 
 <script>
 // ─────────────────────────────────────────────
-//  CONFIG — set these two values
-// ─────────────────────────────────────────────
-const APP_PASSWORD = 'Durian@FHC2026';          // shared access password
-const SHEET_URL    = 'https://script.google.com/macros/s/AKfycbzDaXiBXgWMR-44M_VO1jmveDCxUcovty3CWhCqJop_mVc65_odXg33IgtQNdwoEHxr/exec';
-
-// ─────────────────────────────────────────────
-//  PASSWORD GATE — disabled for now
-// ─────────────────────────────────────────────
-function checkPw() {} // placeholder — will be enabled later
-
-// ─────────────────────────────────────────────
-//  SUBMIT TO ADMIN (Google Sheets)
-// ─────────────────────────────────────────────
-function submitToAdmin() {
-  const status = document.getElementById('submit-status');
-  status.style.display = 'block';
-  status.className = 'ss-wait';
-  status.textContent = '⏳ Submitting…';
-
-  if (!SHEET_URL || SHEET_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
-    status.className = 'ss-err';
-    status.textContent = '⚠️ Admin URL not configured yet. Contact Zonal VM.';
-    return;
-  }
-
-  const meta = getMeta ? getMeta() : {};
-  const p = buildPayload();
-
-  // collect red flags
-  const rfList = [];
-  SECS.forEach(sec => sec.items.forEach(it => {
-    if (it[5] && ST.a[it[0]] === it[5]) rfList.push(`${sec.title}: ${it[1]}`);
-  }));
-
-  const payload = {
-    timestamp:    new Date().toISOString(),
-    store:        meta.store || document.getElementById('f-store')?.value || '',
-    date:         meta.date  || document.getElementById('f-date')?.value || '',
-    vm:           meta.vm    || document.getElementById('f-vm')?.value   || '',
-    manager:      meta.mgr   || document.getElementById('f-mgr')?.value  || '',
-    grade:        meta.grade || document.getElementById('f-grade')?.value|| '',
-    visit_type:   meta.vtype || document.getElementById('f-vtype')?.value|| '',
-    score:        p.pct,
-    compliant:    p.yes,
-    non_compliant:p.no,
-    red_flags:    rfList.length,
-    red_flag_list:rfList.join(' | '),
-    total_q:      p.tot,
-    answered:     p.done,
-    photos:       photoCount()
-  };
-
-  fetch(SHEET_URL, {
-    method: 'POST',
-    mode:   'no-cors',
-    headers:{'Content-Type':'application/json'},
-    body:   JSON.stringify(payload)
-  }).then(() => {
-    status.className = 'ss-ok';
-    status.textContent = '✅ Submitted! Audit recorded in the central dashboard.';
-  }).catch(err => {
-    status.className = 'ss-err';
-    status.textContent = '❌ Submission failed. Check your connection and try again.';
-  });
-}
-
-// ─────────────────────────────────────────────
 //  DATA  —  61 questions from finalised Excel
 //  [id, question, type(0=yn,1=yna,2=num,3=txt), redFlag, imgReq]
 // ─────────────────────────────────────────────
@@ -554,7 +447,6 @@ const SECS = [
     ['q13','Are all labels readable, correctly placed, and facing outward?',0,0,1,null],
     ['q14','Are there any missing samples or finish boards?',0,1,0,'y'],
     ['q15','If YES — list missing sample codes / names',3,0,0,null],
-    ['q66','Is the discussion table in the Material Library section free from loose samples, catalogues, or swatches?',0,0,0,'n'],
   ]},
   { id:'s4', n:4, title:'Boxes, packing material & back-area tidiness', badge:'m', items:[
     ['q16','Are there any open cartons or packing material visible on the floor or near display units?',0,1,1,'y'],
@@ -570,7 +462,6 @@ const SECS = [
     ['q24','Are there any sun-faded or worn-out finish boards or panels on the floor?',0,1,1,'y'],
     ['q25','Are there any damaged or defective items currently on display? (Flag immediately)',0,1,1,'y'],
     ['q26','If YES — note SKU ID and brief description of damage',3,0,0,null],
-    ['q67','Have you received a list of Damaged & Defective items and Snags from the store manager?',0,0,0,'n'],
   ]},
   { id:'s6', n:6, title:'Display arrangement & merchandising', badge:'r', items:[
     ['q27','Are functional demo units (drawers, soft-close, lift-up shutters) working? — physically test them',0,1,1,'n'],
@@ -594,7 +485,6 @@ const SECS = [
     ['q39','Are all metal stands, acrylic holders, or branding props in good condition?',0,0,1,null],
     ['q40','Are brochures, catalogues, or lookbooks stocked and available for customers?',0,0,1,null],
     ['q41','Is wall marketing (if any) relevant, current, and in good condition?',0,0,1,null],
-    ['q65','Are product / collection tent cards displayed on all display SKUs?',0,0,0,'n'],
   ]},
   { id:'s10', n:10, title:'VM props & styling', badge:'r', items:[
     ['q42','Are decorative props (plants, vases, small accessories) in place and clean?',1,0,1,null],
@@ -609,7 +499,6 @@ const SECS = [
     ['q49','Was the FHC staff able to demonstrate products and explain finishes confidently?',0,0,0,null],
     ['q50','Was staff able to explain the customisation process and timelines?',0,0,0,null],
     ['q51','Were customers in the FHC section properly greeted and attended to?',1,0,0,null],
-    ['q68','Is Durian branded / recommended cutlery, cups and plates being used to serve customers?',0,0,1,'n'],
   ]},
   { id:'s12', n:12, title:'Store ambiance & infrastructure', badge:'r', items:[
     ['q52','Is the AC running continuously during showroom hours in the FHC section?',0,0,0,null],
@@ -629,6 +518,8 @@ const SECS = [
     ['q62','Are the meeting rooms maintained in good condition? (No clutter on the table top, chairs placed neatly)',0,0,0,'n'],
     ['q63','Durian Furniture – Is the loose furniture in the store in good condition? (No cuts, scratches or visible damage)',0,0,1,'n'],
     ['q64','If NO — mention the product name(s) with damage',3,0,0,null],
+    ['q69','Are there any discontinued / offer / expired furniture items on display?',0,0,0,'y'],
+    ['q70','If YES — please name the SKUs',3,0,0,null],
   ]},
 ];
 
@@ -706,16 +597,11 @@ function renderItem(it, isLast, secId) {
 
   const photoZone = img ? `
     <div class="photo-zone" id="pz-${id}">
-      <label class="photo-btn" onclick="triggerPhotoCamera('${id}')" title="Take photo with camera">
+      <label class="photo-btn" onclick="triggerPhoto('${id}')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        Camera
-      </label>
-      <label class="photo-btn" onclick="triggerPhotoGallery('${id}')" title="Choose from gallery" style="margin-left:4px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        Gallery
+        Add photo
       </label>
       <input type="file" accept="image/*" capture="environment" class="photo-inp" id="pi-${id}" onchange="handlePhoto('${id}',this)">
-      <input type="file" accept="image/*" class="photo-inp" id="pig-${id}" onchange="handlePhoto('${id}',this)" multiple>
       <div class="photo-grid" id="pg-${id}">${renderThumbs(id)}</div>
     </div>` : '';
 
@@ -792,12 +678,6 @@ function resetAll() {
 // ─────────────────────────────────────────────
 function triggerPhoto(id) {
   document.getElementById('pi-' + id).click();
-}
-function triggerPhotoCamera(id) {
-  document.getElementById('pi-' + id).click();
-}
-function triggerPhotoGallery(id) {
-  document.getElementById('pig-' + id).click();
 }
 
 function handlePhoto(id, input) {
@@ -992,9 +872,8 @@ function buildPayload() {
       tot++;
       const a = ST.a[it[0]];
       if (a !== undefined && a !== '') done++;
-      const isBadAns = it[5] && a === it[5];
-      if (isBadAns) { no++; items.push({ q: it[1], ans: a==='y'?'Yes':'No', rf: true }); redFlags.push(`${sec.title}: ${it[1]}`); }
-      else if (a !== undefined && a !== '' && a !== 'na') { yes++; items.push({ q: it[1], ans: a==='y'?'Yes':'No' }); }
+      if (a === 'y') { yes++; items.push({ q: it[1], ans: 'Yes' }); }
+      else if (a === 'n') { no++; items.push({ q: it[1], ans: 'No', rf: it[3] }); if (it[3]) redFlags.push(`${sec.title}: ${it[1]}`); }
       else if (a === 'na') items.push({ q: it[1], ans: 'N/A' });
     });
     if (items.length) findings.push({ section: sec.title, type: sec.badge === 'm' ? 'Mandatory' : 'Recommended', items, note: ST.n[sec.id] || '' });
@@ -1150,7 +1029,7 @@ function genSlides() {
 
   const score = p.pct;
   const rfList = [];
-  SECS.forEach(sec => sec.items.forEach(it => { if (it[5] && ST.a[it[0]] === it[5]) rfList.push(`${sec.title}: ${it[1].substring(0,60)}…`); }));
+  SECS.forEach(sec => sec.items.forEach(it => { if (it[3] && ST.a[it[0]] === 'n') rfList.push(`${sec.title}: ${it[1].substring(0,60)}…`); }));
   const noItems = [];
   SECS.forEach(sec => sec.items.forEach(it => { if (ST.a[it[0]] === 'n') noItems.push({ sec: sec.title, q: it[1] }); }));
   const okItems = [];
@@ -1253,16 +1132,11 @@ function buildReportHTML() {
 
   // ── RED FLAGS TABLE ──
   const rfHtml = rfList.length
-    ? rfList.map((f,i) => {
-        const ansLabel = f.ans==='y'?'Yes':f.ans==='n'?'No':'—';
-        return `<tr style="background:${i%2===0?'#fff':'#fdf8f8'}">
-          <td style="padding:10px 12px;border-bottom:1px solid #f5e5e5;font-size:11px;font-weight:700;color:#A32D2D;vertical-align:top;white-space:nowrap;width:5%;text-align:center">${i+1}</td>
-          <td style="padding:10px 12px;border-bottom:1px solid #f5e5e5;font-size:12px;font-weight:600;color:#5a1a1a;vertical-align:top;width:25%">${f.sec}</td>
-          <td style="padding:10px 12px;border-bottom:1px solid #f5e5e5;font-size:13px;color:#1a1a1a;vertical-align:top">${f.q}</td>
-          <td style="padding:10px 12px;border-bottom:1px solid #f5e5e5;font-size:13px;font-weight:700;color:#A32D2D;text-align:center;vertical-align:top;white-space:nowrap;width:8%">${ansLabel}</td>
-        </tr>`;
-      }).join('')
-    : `<tr><td colspan="4" style="padding:14px;font-size:13px;color:#0F6E56;text-align:center">✓ No red flags raised during this visit — section is compliant.</td></tr>`;
+    ? rfList.map((f,i) => `<tr style="background:${i%2===0?'#fff':'#fdf8f8'}">
+        <td style="padding:10px 12px;border-bottom:1px solid #f5e5e5;font-size:12px;font-weight:600;color:#A32D2D;vertical-align:top;white-space:nowrap;width:28%">${f.sec}</td>
+        <td style="padding:10px 12px;border-bottom:1px solid #f5e5e5;font-size:13px;color:#1a1a1a;vertical-align:top">${f.q}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="2" style="padding:12px;font-size:13px;color:#0F6E56;text-align:center">✓ No red flags raised during this visit.</td></tr>`;
 
   // ── SECTION NOTES ──
   const sectionNotes = SECS.filter(s => ST.n[s.id]).map(s =>
@@ -1283,8 +1157,8 @@ function buildReportHTML() {
       const isNum  = it[2] === 2;
       const displayAns = isText?(txt||'—'):isNum?(ans||'—'):(ans==='y'?'Yes':ans==='n'?'No':ans==='na'?'N/A':'—');
       const isBad = it[5] && ans === it[5];
-      const ansBg    = isBad ? '#FCEBEB' : '#F7F7F5';
-      const ansColor = isBad ? '#A32D2D' : '#333';
+      const ansBg    = isBad ? '#FCEBEB' : (ans && ans !== 'na') ? '#EBEBEB' : '#F7F7F5';
+      const ansColor = isBad ? '#A32D2D' : (ans && ans !== 'na') ? '#1a1a1a' : '#999';
       const rfBadge  = isBad ? `&nbsp;<span style="font-size:10px;background:#A32D2D;color:#fff;padding:1px 6px;border-radius:3px;font-weight:600">🚩 RED FLAG</span>` : '';
       const photos   = ST.imgs[it[0]] || [];
       const photoHtml = photos.length ? `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">${photos.map(ph=>`<img src="${ph.src}" style="width:180px;height:140px;object-fit:cover;border-radius:6px;border:1px solid #ddd">`).join('')}</div>` : '';
@@ -1324,7 +1198,7 @@ function buildReportHTML() {
 
 <!-- STAT TILES -->
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px">
-  ${[['Compliant','#E1F5EE','#0F6E56',p.yes],['Non-compliant','#FCEBEB','#A32D2D',p.no],['Red flags 🚩','#FCEBEB','#A32D2D',rfList.length],['Photos','#EBF3FC','#185FA5',photoCount()]]
+  ${[['Compliant','#E1F5EE','#0F6E56',p.yes],['Non-compliant','#FCEBEB','#A32D2D',p.no],['Red flags','#FCEBEB','#A32D2D',rfList.length],['Photos','#EBF3FC','#185FA5',photoCount()]]
     .map(([l,bg,c,v])=>`<div style="background:${bg};border-radius:8px;padding:14px 10px;text-align:center">
       <div style="font-size:32px;font-weight:700;color:${c};line-height:1">${v}</div>
       <div style="font-size:10px;color:${c};font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:4px">${l}</div>
@@ -1332,17 +1206,14 @@ function buildReportHTML() {
 </div>
 
 <!-- RED FLAGS -->
-<h2>🚩 Red flag checklist — non-compliant items requiring immediate action</h2>
-<table style="margin-bottom:8px;border:1px solid #f5e5e5;border-radius:8px;overflow:hidden">
-  <thead><tr style="background:#A32D2D">
-    <th style="padding:9px 10px;font-size:11px;text-align:center;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;width:5%">#</th>
-    <th style="padding:9px 12px;font-size:11px;text-align:left;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;width:25%">Section</th>
-    <th style="padding:9px 12px;font-size:11px;text-align:left;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em">Non-compliant issue</th>
-    <th style="padding:9px 10px;font-size:11px;text-align:center;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;width:8%">Answer</th>
+<h2>Red flags — immediate action required</h2>
+<table style="margin-bottom:8px">
+  <thead><tr style="background:#FCEBEB">
+    <th style="padding:9px 12px;font-size:11px;text-align:left;font-weight:700;color:#A32D2D;text-transform:uppercase;letter-spacing:.05em;width:28%">Section</th>
+    <th style="padding:9px 12px;font-size:11px;text-align:left;font-weight:700;color:#A32D2D;text-transform:uppercase;letter-spacing:.05em">Issue</th>
   </tr></thead>
   <tbody>${rfHtml}</tbody>
 </table>
-${rfList.length ? `<div style="font-size:11px;color:#A32D2D;margin-bottom:4px;padding:6px 10px;background:#FCEBEB;border-radius:6px">⚠️ ${rfList.length} red flag${rfList.length>1?'s':''} identified — corrective action required within ${followupDays} days.</div>` : ''}
 
 ${sectionNotes ? `<h2>Section notes</h2><div style="background:#F7F7F5;border-radius:8px;padding:16px 18px;margin-bottom:4px">${sectionNotes}</div>` : ''}
 
