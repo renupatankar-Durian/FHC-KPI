@@ -243,10 +243,31 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
   .brand-sub{display:none}
 }
 
+/* ── DRAFT BANNER ── */
+.draft-banner{background:linear-gradient(135deg,#F0FAF6,#E5F5EE);border:1.5px solid rgba(15,110,86,.25);border-radius:var(--rad-lg);padding:1rem 1.25rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+.draft-banner-title{font-size:13px;font-weight:600;color:var(--g);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.draft-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.65);border-radius:8px;margin-bottom:4px;flex-wrap:wrap}
+.draft-item:last-child{margin-bottom:0}
+.draft-info{flex:1;min-width:140px}
+.draft-name{font-size:13px;font-weight:600;color:var(--ink)}
+.draft-meta-txt{font-size:11px;color:var(--ink3);margin-top:1px}
+.draft-actions{display:flex;gap:5px}
+.draft-saved-chip{display:none;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;background:var(--gl);color:var(--g);border:1px solid rgba(15,110,86,.2);font-family:'DM Mono',monospace;vertical-align:middle}
+
 </style>
 </head>
 <body>
 <div class="shell">
+
+<!-- ── DRAFT RESUME BANNER ── -->
+<div class="draft-banner" id="draft-banner" style="display:none">
+  <div class="draft-banner-title">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    Resume a saved draft
+  </div>
+  <div id="draft-banner-list"></div>
+  <button onclick="document.getElementById('draft-banner').style.display='none'" style="font-size:11px;color:var(--ink3);background:none;border:none;cursor:pointer;margin-top:8px;padding:0;text-decoration:underline">Dismiss</button>
+</div>
 
 <div class="topbar">
   <div class="brand">
@@ -280,15 +301,15 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
   <div class="card">
     <div class="card-title">Visit details</div>
     <div class="meta-grid">
-      <div class="mf"><label>Store name</label><input id="f-store" placeholder="e.g. Durian Thane"></div>
-      <div class="mf"><label>Visit date</label><input id="f-date" type="date"></div>
-      <div class="mf"><label>Zonal VM</label><input id="f-vm" placeholder="Full name"></div>
-      <div class="mf"><label>FHC store manager</label><input id="f-mgr" placeholder="Manager name"></div>
+      <div class="mf"><label>Store name</label><input id="f-store" placeholder="e.g. Durian Thane" onchange="scheduleAutoSave()"></div>
+      <div class="mf"><label>Visit date</label><input id="f-date" type="date" onchange="scheduleAutoSave()"></div>
+      <div class="mf"><label>Zonal VM</label><input id="f-vm" placeholder="Full name" onchange="scheduleAutoSave()"></div>
+      <div class="mf"><label>FHC store manager</label><input id="f-mgr" placeholder="Manager name" onchange="scheduleAutoSave()"></div>
       <div class="mf"><label>Store grade</label>
-        <select id="f-grade"><option value="">Select grade</option><option>A</option><option>B+</option><option>B</option><option>C</option></select>
+        <select id="f-grade" onchange="scheduleAutoSave()"><option value="">Select grade</option><option>A</option><option>B+</option><option>B</option><option>C</option></select>
       </div>
       <div class="mf"><label>Visit type</label>
-        <select id="f-vtype"><option>Regular visit</option><option>Surprise audit</option><option>Follow-up visit</option></select>
+        <select id="f-vtype" onchange="scheduleAutoSave()"><option>Regular visit</option><option>Surprise audit</option><option>Follow-up visit</option></select>
       </div>
     </div>
   </div>
@@ -303,6 +324,7 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
       <div class="tally t-r" id="t-rf">🚩 0 red flags</div>
       <div class="tally t-a" id="t-img">📷 0 images needed</div>
       <div class="tally t-g" id="t-ok">✓ 0 compliant</div>
+      <span class="draft-saved-chip" id="draft-saved-chip">💾 Draft saved</span>
     </div>
   </div>
 
@@ -316,6 +338,12 @@ body{font-family:'DM Sans',sans-serif;background:#F4F2EF;color:var(--ink);min-he
 
 <!-- ════════════════ SHARE ════════════════ -->
 <div class="panel" id="p-share">
+  <div class="card" id="saved-drafts-card">
+    <div class="card-title">💾 Saved drafts on this device</div>
+    <p style="font-size:12px;color:var(--ink3);margin-bottom:12px;line-height:1.6">Audits are auto-saved here as you fill them in. Resume any draft to continue from where you left off.</p>
+    <div id="drafts-list"><p style="font-size:12px;color:var(--ink3)">No saved drafts on this device.</p></div>
+  </div>
+
   <div class="card">
     <div class="card-title">Current audit status</div>
     <div class="stat-rows" id="share-stats"></div>
@@ -538,7 +566,7 @@ function showTab(id, btn) {
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
   document.getElementById('p-' + id).classList.add('on');
   btn.classList.add('on');
-  if (id === 'share') refreshShareStats();
+  if (id === 'share') { refreshShareStats(); renderDraftList(); }
 }
 
 // ─────────────────────────────────────────────
@@ -590,9 +618,9 @@ function renderItem(it, isLast, secId) {
       <button class="ab${a==='na'?' na':''}" onclick="setAns('${id}','na',this,'${secId}')">N/A</button>
     </div>`;
   } else if (type === 2) {
-    ctrl = `<input type="number" class="num-inp" min="0" value="${a||''}" placeholder="0" oninput="ST.a['${id}']=this.value;updateScores()">`;
+    ctrl = `<input type="number" class="num-inp" min="0" value="${a||''}" placeholder="0" oninput="ST.a['${id}']=this.value;updateScores();scheduleAutoSave()">`;
   } else {
-    ctrl = `<input type="text" class="txt-inp" value="${ST.t[id]||''}" placeholder="Enter details here…" oninput="ST.t['${id}']=this.value">`;
+    ctrl = `<input type="text" class="txt-inp" value="${ST.t[id]||''}" placeholder="Enter details here…" oninput="ST.t['${id}']=this.value;scheduleAutoSave()">`;
   }
 
   const photoZone = img ? `
@@ -623,6 +651,7 @@ function setAns(id, val, btn, secId) {
   updateScores();
   const sec = SECS.find(s => s.id === secId);
   if (sec) { const {d,tot} = secProg(sec); document.getElementById('sp-'+secId).textContent = `${d}/${tot}`; }
+  scheduleAutoSave();
 }
 
 function secProg(sec) {
@@ -691,6 +720,7 @@ function handlePhoto(id, input) {
         if (ST.imgs[id].length >= 5) { alert('Maximum 5 photos per question.'); return; }
         ST.imgs[id].push({ src: compressed, name: file.name });
         document.getElementById('pg-' + id).innerHTML = renderThumbs(id);
+        scheduleAutoSave();
       });
     };
     reader.readAsDataURL(file);
@@ -826,6 +856,174 @@ function handleLoadFile(input) {
   };
   reader.readAsText(file);
   input.value = '';
+}
+
+// ─────────────────────────────────────────────
+//  DRAFT AUTO-SAVE (localStorage, keyed by store+date)
+// ─────────────────────────────────────────────
+let _autoSaveTimer = null;
+
+function scheduleAutoSave() {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(doAutoSave, 1200);
+}
+
+function getDraftKey() {
+  const m = getMeta();
+  const store = (m.store || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown';
+  const date  = (m.date || '').trim() || 'nodate';
+  return `fhc_draft_v1_${store}_${date}`;
+}
+
+function doAutoSave() {
+  const meta = getMeta();
+  const p = buildPayload ? buildPayload() : {};
+  const key = getDraftKey();
+  const payload = {
+    meta, a: {...ST.a}, t: {...ST.t}, n: {...ST.n}, imgs: {...ST.imgs},
+    savedAt: new Date().toISOString(),
+    pct: p.pct || 0, done: p.done || 0, tot: p.tot || 0
+  };
+  try {
+    localStorage.setItem(key, JSON.stringify(payload));
+  } catch(e) {
+    // quota exceeded — retry without images
+    try { payload.imgs = {}; payload._noImgs = true; localStorage.setItem(key, JSON.stringify(payload)); }
+    catch(e2) { return; }
+  }
+  try {
+    const idx = JSON.parse(localStorage.getItem('fhc_drafts_index') || '[]');
+    if (!idx.includes(key)) { idx.push(key); localStorage.setItem('fhc_drafts_index', JSON.stringify(idx)); }
+  } catch(e) {}
+  updateDraftIndicator();
+}
+
+function updateDraftIndicator() {
+  const chip = document.getElementById('draft-saved-chip');
+  if (!chip) return;
+  chip.style.display = 'inline';
+  chip.title = 'Last saved: ' + new Date().toLocaleTimeString('en-IN');
+}
+
+function listDrafts() {
+  try {
+    const idx = JSON.parse(localStorage.getItem('fhc_drafts_index') || '[]');
+    const result = [];
+    const validIdx = [];
+    idx.forEach(key => {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return;
+        const d = JSON.parse(raw);
+        result.push({ key, ...d });
+        validIdx.push(key);
+      } catch(e) {}
+    });
+    // Prune index of dead keys
+    if (validIdx.length !== idx.length) {
+      try { localStorage.setItem('fhc_drafts_index', JSON.stringify(validIdx)); } catch(e) {}
+    }
+    return result.sort((a,b) => (b.savedAt||'').localeCompare(a.savedAt||''));
+  } catch(e) { return []; }
+}
+
+function resumeDraft(key) {
+  try {
+    const data = JSON.parse(localStorage.getItem(key) || 'null');
+    if (!data) { alert('Draft not found.'); return; }
+    // Clear current state
+    Object.keys(ST.a).forEach(k => delete ST.a[k]);
+    Object.keys(ST.t).forEach(k => delete ST.t[k]);
+    Object.keys(ST.n).forEach(k => delete ST.n[k]);
+    Object.keys(ST.imgs).forEach(k => delete ST.imgs[k]);
+    // Restore
+    Object.assign(ST.a, data.a||{});
+    Object.assign(ST.t, data.t||{});
+    Object.assign(ST.n, data.n||{});
+    if (data.imgs) Object.assign(ST.imgs, data.imgs);
+    const m = data.meta || {};
+    ['store','date','vm','mgr','grade','vtype'].forEach(k => {
+      const el = document.getElementById('f-'+k);
+      if (el && m[k] !== undefined) el.value = m[k];
+    });
+    renderChecklist();
+    document.getElementById('draft-banner').style.display = 'none';
+    // Switch to checklist tab
+    const tabs = document.querySelectorAll('.tab');
+    showTab('checklist', tabs[0]);
+    updateDraftIndicator();
+    if (data._noImgs) {
+      setTimeout(() => alert('ℹ️ Photos were not saved in this draft (storage limit). Please re-attach any photos.'), 300);
+    }
+  } catch(e) { alert('Could not load draft.'); }
+}
+
+function deleteDraft(key) {
+  try {
+    localStorage.removeItem(key);
+    const idx = JSON.parse(localStorage.getItem('fhc_drafts_index') || '[]').filter(k => k !== key);
+    localStorage.setItem('fhc_drafts_index', JSON.stringify(idx));
+  } catch(e) {}
+  renderDraftList();
+  checkForDrafts();
+}
+
+function renderDraftList() {
+  const el = document.getElementById('drafts-list');
+  if (!el) return;
+  const drafts = listDrafts();
+  if (!drafts.length) {
+    el.innerHTML = '<p style="font-size:12px;color:var(--ink3)">No saved drafts on this device.</p>';
+    return;
+  }
+  el.innerHTML = drafts.map(d => {
+    const savedAt = d.savedAt
+      ? new Date(d.savedAt).toLocaleString('en-IN', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})
+      : '—';
+    const pct  = d.pct || 0;
+    const done = d.done || 0;
+    const tot  = d.tot  || 0;
+    const store = (d.meta && d.meta.store) || 'Unknown store';
+    const date  = (d.meta && d.meta.date)  || '';
+    const vm    = (d.meta && d.meta.vm)    || '';
+    const imgNote = d._noImgs ? ' · <em>photos not saved</em>' : '';
+    return `<div class="draft-item">
+      <div class="draft-info">
+        <div class="draft-name">${store}</div>
+        <div class="draft-meta-txt">${date}${vm ? ' · ' + vm : ''} · ${pct}% done (${done}/${tot} answered) · saved ${savedAt}${imgNote}</div>
+      </div>
+      <div class="draft-actions">
+        <button class="btn btn-sm btn-p" onclick="resumeDraft('${d.key}')">Resume</button>
+        <button class="btn btn-sm" style="color:var(--r);border-color:rgba(163,45,45,.3)" onclick="if(confirm('Delete this draft?'))deleteDraft('${d.key}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function checkForDrafts() {
+  const banner = document.getElementById('draft-banner');
+  const bannerList = document.getElementById('draft-banner-list');
+  if (!banner || !bannerList) return;
+  const drafts = listDrafts();
+  if (!drafts.length) { banner.style.display = 'none'; return; }
+  banner.style.display = 'block';
+  bannerList.innerHTML = drafts.map(d => {
+    const savedAt = d.savedAt
+      ? new Date(d.savedAt).toLocaleString('en-IN', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})
+      : '—';
+    const store = (d.meta && d.meta.store) || 'Unknown store';
+    const date  = (d.meta && d.meta.date)  || '';
+    const pct   = d.pct || 0;
+    return `<div class="draft-item">
+      <div class="draft-info">
+        <div class="draft-name">${store}</div>
+        <div class="draft-meta-txt">${date} · ${pct}% done · saved ${savedAt}</div>
+      </div>
+      <div class="draft-actions">
+        <button class="btn btn-sm btn-p" onclick="resumeDraft('${d.key}')">Resume →</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function copyCode() {
@@ -1266,6 +1464,8 @@ function printReport() {
 // ─────────────────────────────────────────────
 document.getElementById('f-date').valueAsDate = new Date();
 renderChecklist();
+checkForDrafts();
+renderDraftList();
 </script>
 </body>
 </html>
